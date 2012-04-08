@@ -19,7 +19,7 @@ def termsize():
 
 
 class Options(usage.Options):
-    optParameters = [['uri', 'u', 'http://localhost:1353/', 'JSON-RPC URI.']]
+    optParameters = [['uri', 'u', 'http://localhost:1353/amp', 'JSON-RPC URI.']]
 
     def parseArgs(self, id):
         self['id'] = int(id)
