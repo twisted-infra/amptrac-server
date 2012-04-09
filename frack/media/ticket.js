@@ -1,9 +1,13 @@
-require(["dojo/dom", "dojo/query", "dojo/rpc/JsonService","dojo/NodeList-manipulate",  "dojo/domReady!"], function(dom, q, makeService) {
+require(["dojo/dom", "dojo/query", "dojo/rpc/JsonService", "dojo/io-query",
+         "dojo/NodeList-manipulate",  "dojo/domReady!"],
+        function(dom, q, makeService, ioq) {
+            var queryObject = ioq.queryToObject(document.location.search.substr(document.location.search[0] === "?" ? 1 : 0));
             var frack = makeService({"serviceUrl": "/amp"});
-            var d = frack.callRemote("FetchTicket", {"id": 4711});
+            var d = frack.callRemote("FetchTicket", {"id": queryObject.id});
             var showIt = function (response) {
                 q("title").append(" #" + response["id"] + " (" + response["summary"] + ") - Twisted");
                 q("#ticket-number").text(response["id"]);
+                q("h2.summary").text(response["summary"]);
                 q(".statuses .type").text(response["type"]);
                 q(".statuses .status").text(response["status"]);
                 q("#ticket-time").text(response["time"]);
