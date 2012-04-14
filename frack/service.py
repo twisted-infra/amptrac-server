@@ -1,16 +1,16 @@
 # Copyright (c) Twisted Matrix Laboratories.
 # See LICENSE for details.
+import os, pwd
 from twisted.python import usage
 from twisted.application.service import Service
 from twisted.python.util import sibpath
-from frack.db import DBStore
-#from frack.inmemory import DBStore
+from frack.db import DBStore, sqlite_connect, postgres_probably_connect
 from frack.wiring import AMPService, JSONRPCService
 
 class FrackService(Service):
 
-    def __init__(self, db, ampPort, jsonRPCPort, mediaPath):
-        self.dbname = db
+    def __init__(self, dbconnection, ampPort, jsonRPCPort, mediaPath):
+        self.store = DBStore(dbconnection)
         self.ampPort = ampPort
         self.jsonRPCPort = jsonRPCPort
         self.mediaPath = mediaPath
@@ -19,9 +19,9 @@ class FrackService(Service):
 
 
     def startService(self):
-        self.store = DBStore(self.dbname)
         self.amp = AMPService(self.ampPort, self.store)
         self.amp.startService()
+
         self.jsonrpc = JSONRPCService(self.jsonRPCPort, self.store, self.mediaPath)
         self.jsonrpc.startService()
 
@@ -30,14 +30,41 @@ class FrackService(Service):
 class Options(usage.Options):
     synopsis = '[frack options]'
 
-    optParameters = [['db', None, 'trac', 'Name of database to connect to.'],
-                     ['amp', 'a', 'tcp:1352', 'Service description for the AMP listener.'],
-                     ['jsonrpc', 'j', 'tcp:1353', 'Service description for the JSON-RPC listener.'],
-                     ['mediapath', 'p', sibpath(__file__, 'media'), 'Location of media files for web UI.']]
+    optParameters = [['postgres_db', None, None,
+                      'Name of Postgres database to connect to.'],
+
+                     ['postgres_user', 'u', pwd.getpwuid(os.getuid())[0],
+                      'Username for connecting to Postgres.'],
+
+                     ['sqlite_db', None, None,
+                      'Path to SQLite database to connect to.'],
+
+                     ['amp', 'a', 'tcp:1352',
+                      'Service description for the AMP listener.'],
+
+                     ['jsonrpc', 'j', 'tcp:1353',
+                      'Service description for the JSON-RPC listener.'],
+
+                     ['mediapath', 'p', sibpath(__file__, 'media'),
+                      'Location of media files for web UI.']]
 
     longdesc = """Like that other issue tracker, but with different emotions."""
 
 
 
 def makeService(config):
-    return FrackService(db=config['db'], ampPort=config['amp'], jsonRPCPort=config['jsonrpc'], mediaPath=config['mediapath'])
+
+    if config['postgres_db'] and config['sqlite_db']:
+        raise usage.UsageError("Only one of 'sqlite_db' and 'postgres_db' can be specified.")
+    if not config['postgres_db'] and not config['sqlite_db']:
+        config['postgres_db'] = 'trac'
+
+    if config['postgres_db']:
+        connection = postgres_probably_connect(config['postgres_db'], config['postgres_user'])
+    elif config['sqlite_db']:
+        connection = sqlite_connect(config['sqlite_db'])
+
+    return FrackService(dbconnection=connection,
+                        ampPort=config['amp'],
+                        jsonRPCPort=config['jsonrpc'],
+                        mediaPath=config['mediapath'])
