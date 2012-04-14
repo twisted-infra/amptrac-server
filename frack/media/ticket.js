@@ -59,7 +59,7 @@ require(["dojo/string", "dojo/dom", "dojo/query",
             var queryString = document.location.search.substr(
                               document.location.search[0] === "?" ? 1 : 0);
             var urlQueryArgs = ioq.queryToObject(queryString);
-            var d = frack.callRemote("FetchTicket", {"id": urlQueryArgs.id, "asHTML": true});
+            var d = frack.callRemote("FetchTicket", {"id": Number(urlQueryArgs.id), "asHTML": true});
 
             function showIt (response) {
 
