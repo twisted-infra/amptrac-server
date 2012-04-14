@@ -13,7 +13,6 @@ from twisted.internet.defer import maybeDeferred
 from twisted.python import log
 try:
     import trac
-    import foozle
     from trac.wiki.formatter import format_to_html
     from trac.wiki.parser import WikiParser
     from trac.wiki.api import WikiSystem
@@ -85,7 +84,7 @@ def trac_wiki_format(txt):
         def component_activated(self, _): pass
         def get_db_cnx(self): pass
         def __getitem__(self, key): pass
-        project_url = "http://localhost:1353/what"
+        project_url = "http://example.com/"
         config = {'intertrac': {}}
     class Context(object):
         def set_hints(self, disable_warnings):
