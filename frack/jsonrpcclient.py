@@ -77,7 +77,7 @@ cc = count()
 def fetchTicket(id):
     return json.dumps({'jsonrpc': '2.0',
                        'method': 'FetchTicket',
-                       'params': {'id': id},
+                       'params': {'id': id, 'asHTML': False},
                        'id': cc.next()})
 
 

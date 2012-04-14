@@ -84,7 +84,7 @@ def die(e):
 
 def main(config):
     def fetch(p):
-        d = p.callRemote(FetchTicket, id=config['id'])
+        d = p.callRemote(FetchTicket, id=config['id'], asHTML=False)
         d.addCallback(format)
         d.addCallback(lambda _: reactor.stop())
         d.addErrback(die)

@@ -28,7 +28,7 @@
           <p>Opened {{time}}</p>
           <!-- <p>Last modified <a class="timeline" href="http://twistedmatrix.com/trac/timeline?from=2012-04-06T14%3A45%3A18-0400&amp;precision=second" title="2012-04-06T14:45:18-0400 in Timeline">35 hours</a> ago</p> -->
         </div>
-        <h2 class="summary searchable">{{summary}}</h2>
+        <h2 class="summary searchable">{{{summary}}}</h2>
         <table class="properties">
           <tbody><tr>
               <th id="h_reporter">Reported by:</th>
@@ -86,6 +86,7 @@
     </script>
 
     <script id="changelog_template" type="text/html">
+      <h2>Change History</h2>
       {{#changes}}
 	<form method="get" action="#comment" class="printableform">
           <a href="#comment:{{commentnum}}">
@@ -106,7 +107,7 @@
               {{#changes}}
 	      <li>
 		<strong class="column">{{field}}</strong>
-		changed from <em>{{oldvalue}}</em> to <em>{{newvalue}}</em>
+                {{{changeline}}}
 	      </li>
               {{/changes}}
 	    </ul>
@@ -115,6 +116,12 @@
         </form>
 
       {{/changes}}
+    </script>
+
+    <script id="errorbox_template" type="text/html">
+      <div class="system-message">
+        {{error}}
+      </div>
     </script>
 
     <title></title>
@@ -141,8 +148,8 @@
       <hr>
     </div>
     <div id="content" class="ticket">
+      <div id="errorbox"></div>
       <div id="ticketbox"></div>
-      <h2>Change History</h2>
       <div id="changelog"></div>
     </div>
 

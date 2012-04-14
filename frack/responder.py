@@ -5,12 +5,24 @@ try:
     import json
 except ImportError:
     import simplejson as json
+import cgi
 from twisted.protocols import amp
 from twisted.web.server import NOT_DONE_YET
 from twisted.web.resource import Resource
 from twisted.internet.defer import maybeDeferred
+from twisted.python import log
+try:
+    import trac
+    import foozle
+    from trac.wiki.formatter import format_to_html
+    from trac.wiki.parser import WikiParser
+    from trac.wiki.api import WikiSystem
+except ImportError:
+    trac = None
+
 class FetchTicket(amp.Command):
-    arguments = [('id', amp.Integer())]
+    arguments = [('id', amp.Integer()),
+                 ('asHTML', amp.Boolean())]
     response = [('id', amp.Integer()),
                 ('type', amp.Unicode()),
                 ('time', amp.Integer()),
@@ -42,12 +54,51 @@ class AMPFace(amp.BoxDispatcher, amp.CommandLocator):
         amp.BoxDispatcher.__init__(self, self)
         self.store = store
 
+    def _rewriteTicket(self, ticket, transform):
+        ticket['description'] = transform(ticket['description'])
+        for change in ticket['changes']:
+            if change['field'] == 'comment':
+                change['newvalue'] = transform(change['newvalue'])
+        return ticket
 
     @FetchTicket.responder
-    def fetchTicket(self, id):
+    def fetchTicket(self, id, asHTML):
         d = self.store.fetchTicket(id)
-        return d
+        def _cleanup(ticket):
+            if asHTML:
+                if trac:
+                    return self._rewriteTicket(ticket, trac_wiki_format)
+                else:
+                    return self._rewriteTicket(ticket, plaintext_format)
+        return d.addCallback(_cleanup).addErrback(log.err)
 
+
+def plaintext_format(txt):
+    return '<pre style="white-space: pre-line">' + cgi.escape(txt) + '</pre>'
+
+
+def trac_wiki_format(txt):
+    WikiSystem.safe_schemes = 'cvs,file,ftp,git,irc,http,https,news,sftp,smb,ssh,svn,svn+ssh'.split(',')
+    #WikiSystem.syntax_providers = []
+    class Env(object):
+        components = {}
+        def component_activated(self, _): pass
+        def get_db_cnx(self): pass
+        def __getitem__(self, key): pass
+        project_url = "http://localhost:1353/what"
+        config = {'intertrac': {}}
+    class Context(object):
+        def set_hints(self, disable_warnings):
+            pass
+        resource = None
+        req = None
+        href = None
+        perm = None
+        def __call__(self): return self
+
+    env = Env()
+    WikiParser.env = env
+    return format_to_html(env, Context, txt, False)
 
 UNKNOWN_ERROR, UNHANDLED_ERROR_CODE = (-32603, -32601)
 

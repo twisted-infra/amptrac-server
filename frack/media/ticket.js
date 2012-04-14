@@ -21,17 +21,34 @@ require(["dojo/string", "dojo/dom", "dojo/query",
             function groupComments(changes) {
                 var commentnum = 1;
                 var commentgroups = [];
+                var setLineTempl = Mustache.compile(
+                    "set to <em>{{newvalue}}</em>");
+                var changedLineTempl = Mustache.compile(
+                    "changed from <em>{{oldvalue}}</em> to"
+                    + " <em>{{newvalue}}</em>");
                 changes.forEach(
                     function (change) {
                         var last = commentgroups[commentgroups.length - 1];
-                        if (!last || change.author != last.author || change.time != last.time) {
-                            last = {"commentnum": commentnum, "time": change['time'], "author": change['author'], "changes": []};
+                        if (!last || change.author != last.author
+                                  || change.time != last.time) {
+                            last = {"commentnum": commentnum,
+                                    "time": change['time'],
+                                    "author": change['author'], "changes": []};
                             commentgroups.push(last);
                             commentnum += 1;
                         }
                         if (change.field == 'comment') {
-                            last.comment = '<pre>' +  change['newvalue'] + '</pre>';
+                            last.comment = change.newvalue;
                         } else {
+                            if (change.field == 'description') {
+                                change.changeline = "modified";
+                            } else if (!change.oldvalue) {
+                                change.changeline = setLineTempl(change);
+                            } else if (!change.newvalue) {
+                                change.changeline = "removed";
+                            } else {
+                                change.changeline = changedLineTempl(change);
+                            }
                             last.changes.push(change);
                         }
                     });
@@ -42,7 +59,7 @@ require(["dojo/string", "dojo/dom", "dojo/query",
             var queryString = document.location.search.substr(
                               document.location.search[0] === "?" ? 1 : 0);
             var urlQueryArgs = ioq.queryToObject(queryString);
-            var d = frack.callRemote("FetchTicket", {"id": urlQueryArgs.id});
+            var d = frack.callRemote("FetchTicket", {"id": urlQueryArgs.id, "asHTML": true});
 
             function showIt (response) {
 
@@ -50,10 +67,14 @@ require(["dojo/string", "dojo/dom", "dojo/query",
 
                 q("title").append(string.substitute("#${0} (${1}) - Twisted", [response.id, response.summary]));
 
-                ticketboxData.description = "<pre>" + response.description + "</pre>";
 
                 fill("ticketbox", ticketboxData);
                 fill("changelog", {"changes": groupComments(response.changes)});
             };
             d.addCallback(showIt);
+
+            function displayError(e) {
+                fill("errorbox", {"error": e});
+            }
+            d.addErrback(displayError);
 });
