@@ -58,7 +58,7 @@ class AMPFace(amp.BoxDispatcher, amp.CommandLocator):
         for change in ticket['changes']:
             if change['field'] == 'comment':
                 change['newvalue'] = transform(change['newvalue'])
-        return ticket
+
 
     @FetchTicket.responder
     def fetchTicket(self, id, asHTML):
@@ -66,9 +66,10 @@ class AMPFace(amp.BoxDispatcher, amp.CommandLocator):
         def _cleanup(ticket):
             if asHTML:
                 if trac:
-                    return self._rewriteTicket(ticket, trac_wiki_format)
+                    self._rewriteTicket(ticket, trac_wiki_format)
                 else:
-                    return self._rewriteTicket(ticket, plaintext_format)
+                    self._rewriteTicket(ticket, plaintext_format)
+            return ticket
         return d.addCallback(_cleanup).addErrback(log.err)
 
 

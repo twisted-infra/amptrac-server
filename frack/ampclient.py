@@ -16,6 +16,8 @@ def termsize():
 
 
 class Options(usage.Options):
+    synopsis = "frack.ampclient [options] <ticket id>"
+
     optParameters = [['port', 'p', 'tcp:localhost:1352', 'Service description for the AMP connector.']]
 
     def parseArgs(self, id):

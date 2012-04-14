@@ -19,6 +19,8 @@ def termsize():
 
 
 class Options(usage.Options):
+    synopsis = "frack.ampclient [options] <ticket id>"
+
     optParameters = [['uri', 'u', 'http://localhost:1353/amp', 'JSON-RPC URI.']]
 
     def parseArgs(self, id):
