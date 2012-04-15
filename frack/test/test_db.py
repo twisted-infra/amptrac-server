@@ -28,7 +28,7 @@ class DBTests(TestCase):
                               "owner", "priority",  "resolution", "component",
                               "keywords", "cc", "branch", "branch_author",
                               "launchpad_bug", "description", "changes",
-                              "attachments", "id"})
+                              "attachments", "id", "changetime"})
 
             self.assertEqual(len(result['changes']), 45)
             self.assertEqual(set(result['changes'][0].keys()),

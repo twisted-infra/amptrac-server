@@ -40,15 +40,15 @@ class DBStore(object):
     def fetchTicket(self, ticketNumber):
         c = self.connection.cursor()
         c.execute(self.q(
-                "SELECT id, type, time, component, priority, owner, reporter, "
-                "cc, status, resolution, summary, description, keywords "
-                "FROM ticket WHERE id = ?"), [ticketNumber])
+                "SELECT id, type, time, changetime, component, priority, owner,"
+                " reporter, cc, status, resolution, summary, description, "
+                "keywords FROM ticket WHERE id = ?"), [ticketNumber])
         ticketRow = c.fetchone()
         c.execute(self.q("SELECT time, author, field, oldvalue, newvalue "
                          "FROM ticket_change WHERE ticket = ? ORDER BY time"),
                   [ticketNumber])
         changeFields = ['time', 'author', 'field', 'oldvalue', 'newvalue']
-        ticketFields = ["id", "type", "time", "component", "priority", "owner",
+        ticketFields = ["id", "type", "time", "changetime", "component", "priority", "owner",
                         "reporter", "cc", "status", "resolution", "summary",
                         "description", "keywords"]
         changesRow = c.fetchall()

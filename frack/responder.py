@@ -25,6 +25,7 @@ class FetchTicket(amp.Command):
     response = [('id', amp.Integer()),
                 ('type', amp.Unicode()),
                 ('time', amp.Integer()),
+                ('changetime', amp.Integer()),
                 ('component', amp.Unicode()),
                 ('priority', amp.Unicode()),
                 ('owner', amp.Unicode()),

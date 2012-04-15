@@ -68,13 +68,10 @@ require(["dojo/string", "dojo/dom", "dojo/query",
             var d = frack.callRemote("FetchTicket", {"id": Number(urlQueryArgs.id), "asHTML": true});
 
             function showIt (response) {
-
-                var ticketboxData = Object.create(response);
-
                 q("title").append(string.substitute("#${0} (${1}) - Twisted", [response.id, response.summary]));
-
-
-                fill("ticketbox", ticketboxData);
+                response["time"] = fromUNIXTime(response["time"]);
+                response["changetime"] = fromUNIXTime(response["changetime"]);
+                fill("ticketbox", response);
                 fill("changelog", {"changes": groupComments(response.changes)});
             };
             d.addCallback(showIt);
