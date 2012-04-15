@@ -1,9 +1,9 @@
 // Copyright (c) Twisted Matrix Laboratories.
 // See LICENSE for details.
 require(["dojo/string", "dojo/dom", "dojo/query",
-         "dojo/rpc/JsonService", "dojo/io-query",
+         "dojo/rpc/JsonService", "dojo/io-query", 'dojo/date/locale',
          "/ui/mustache.js", "dojo/NodeList-manipulate",  "dojo/domReady!"],
-        function(string, dom, q, makeService, ioq) {
+        function(string, dom, q, makeService, ioq, date) {
 
             /**
               * Find the target DOM node, its corresponding template,
@@ -14,6 +14,11 @@ require(["dojo/string", "dojo/dom", "dojo/query",
                 var ctempl = Mustache.compile(templ, {"debug": false});
                 var rendered = ctempl(data);
                 q("#" + target).addContent(rendered);
+            }
+
+            /** Format a UNIX time as a date. */
+            function fromUNIXTime(time) {
+                return date.format(new Date(time * 1000));
             }
 
             /** Group change entries into comment boxes by author and
@@ -30,9 +35,10 @@ require(["dojo/string", "dojo/dom", "dojo/query",
                     function (change) {
                         var last = commentgroups[commentgroups.length - 1];
                         if (!last || change.author != last.author
-                                  || change.time != last.time) {
+                                  || change.time != last.unixtime) {
                             last = {"commentnum": commentnum,
-                                    "time": change['time'],
+                                    "time": fromUNIXTime(change['time']),
+                                    "unixtime": change['time'],
                                     "author": change['author'], "changes": []};
                             commentgroups.push(last);
                             commentnum += 1;
