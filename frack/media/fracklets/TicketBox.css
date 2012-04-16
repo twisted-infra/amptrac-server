@@ -1,0 +1,50 @@
+#ticket {
+    background: #fff;
+    border-radius: 0.35em;
+    padding: .5em 1em;
+    border: 1px solid #d0d0d0;
+    border-bottom: 2px solid #83a501;
+    margin-bottom: 1.5em;
+    -moz-box-shadow: 0 0.15em 0.25em rgba(0, 0, 0, 0.15);
+    -webkit-box-shadow: 0 0.15em 0.25em rgba(0, 0, 0, 0.15);
+    box-shadow: 0 0.15em 0.25em rgba(0, 0, 0, 0.15);
+}
+
+#ticket .date {
+    color: #996;
+    float: right;
+    font-size: 85%;
+    margin: 1em 0;
+    text-align: right;
+}
+#ticket .date p { margin: .3em }
+
+#ticket table.properties {
+    clear: both;
+    border: 1px solid #bbb;
+    border-radius: 0.35em;
+    table-layout: fixed;
+    width: 100%;
+    background: #eee;
+}
+#ticket table.properties td, #ticket table.properties th {
+ font-size: 0.875em;
+ padding: .5em 1em;
+ vertical-align: top;
+ font-size: 1em;
+ padding: .35em .5em;
+}
+#ticket table.properties th {
+    color: #83a501;
+    text-align: left;
+    text-align: right;
+    width: 20%;
+}
+#ticket table.properties td { width: 30% }
+#ticket table.properties td p:first-child { margin-top: 0 }
+#ticket table.properties td p:last-child { margin-bottom: 0 }
+#ticket table.properties .description { border-top: 1px solid #dd9 }
+
+#ticket .description h3 .lastmod {
+ font-size: 90%;
+}

@@ -5,127 +5,15 @@
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <meta name="ROBOTS" content="NOODP">
     <meta name="Description" content="An event-driven networking engine written in Python and MIT licensed.">
+    <link rel="stylesheet" href="trac.css" type="text/css"><link rel="stylesheet" href="ticket.css" type="text/css">
     <script src="http://ajax.googleapis.com/ajax/libs/dojo/1.7.2/dojo/dojo.js"
             type="text/javascript"
-            data-dojo-config="async: true"></script>
+            data-dojo-config="async: true, packages: [{name: 'fracklets', location: '/ui/fracklets'}]"></script>
     <!-- <script src="dojo/dojo/dojo.js" -->
     <!--         type="text/javascript" -->
-    <!--         data-dojo-config="async: true"></script> -->
+    <!--         data-dojo-config="async: true, packages: [{name: 'fracklets', location: '/ui/fracklets'}]"></script> -->
     <script src="ticket.js" type="text/javascript"></script>
-
-    <script id="ticketbox_template" type="text/template">
-      <h1>
-        <span class="title">
-          Ticket #{{id}}
-        </span>
-        <span class="statuses">
-          <span class="type">{{type}}</span>
-          <span class="status">{{status}}</span>
-        </span>
-      </h1>
-      <div id="ticket">
-        <div class="date">
-          <p>Opened {{time}}</p>
-          <p>Last modified {{changetime}}</p>
-        </div>
-        <h2 class="summary searchable">{{{summary}}}</h2>
-        <table class="properties">
-          <tbody><tr>
-              <th id="h_reporter">Reported by:</th>
-              <td headers="h_reporter" class="searchable">{{reporter}}</td>
-              <th id="h_owner">Owned by:</th>
-              <td headers="h_owner">{{owner}}</td>
-            </tr>
-            <tr>
-              <th id="h_priority">
-                Priority:
-              </th>
-              <td headers="h_priority">{{priority}}</td>
-              <th id="h_milestone">
-                Milestone:
-              </th>
-              <td headers="h_milestone">
-                <a class="missing milestone" href="http://twistedmatrix.com/trac/milestone/" rel="nofollow"></a>
-              </td>
-            </tr><tr>
-              <th id="h_component">
-                Component:
-              </th>
-              <td headers="h_component">{{component}}</td>
-              <th id="h_keywords">
-                Keywords:
-              </th>
-              <td headers="h_keywords" class="searchable">{{keywords}}</td>
-            </tr><tr>
-              <th id="h_cc">
-                Cc:
-              </th>
-              <td headers="h_cc" class="searchable">{{cc}}</td>
-              <th id="h_branch">
-                Branch:
-              </th>
-              <td headers="h_branch">{{branch}}</td>
-            </tr><tr>
-              <th id="h_branch_author">
-                Author:
-              </th>
-              <td headers="h_branch_author">{{branch_author}}</td>
-              <th id="h_launchpad_bug">
-                Launchpad Bug:
-              </th>
-              <td headers="h_launchpad_bug">{{launchpad_bug}}</td>
-            </tr>
-        </tbody></table>
-        <div class="description">
-          <h3 id="comment:description">
-            Description
-            <a title="Link to this section" href="#comment:description" class="anchor"> ¶</a></h3>
-          <div class="searchable">{{{description}}}</div>
-        </div>
-      </div>
-    </script>
-
-    <script id="changelog_template" type="text/html">
-      <h2>Change History</h2>
-      {{#changes}}
-	<form method="get" action="#comment" class="printableform">
-          <a href="#comment:{{commentnum}}">
-            <h2 class="comment-number">{{commentnum}}</h2>
-          </a>
-          <div class="change">
-            <h3 class="change" id="#comment:{{commentnum}}">
-              <span class="threading">
-                &nbsp;
-              </span>
-              Changed {{time}} by {{author}}
-              <a title="Link to this change" href="#comment:{{commentnum}}" class="anchor"> ¶</a></h3>
-            <!-- <div class="inlinebuttons"> -->
-            <!--     <input name="replyto" value="1" type="hidden"> -->
-            <!--     <input value="Reply" title="Reply to comment 1" type="submit"> -->
-            <!-- </div> -->
-	    <ul class="changes">
-              {{#changes}}
-	      <li>
-		<strong class="column">{{field}}</strong>
-                {{{changeline}}}
-	      </li>
-              {{/changes}}
-	    </ul>
-	    <div class="comment searchable">{{{comment}}}</div>
-          </div>
-        </form>
-
-      {{/changes}}
-    </script>
-
-    <script id="errorbox_template" type="text/html">
-      <div class="system-message">
-        {{error}}
-      </div>
-    </script>
-
     <title></title>
-    <link rel="stylesheet" href="trac.css" type="text/css"><link rel="stylesheet" href="ticket.css" type="text/css">
   </head>
   <body>
     <div id="banner">
@@ -148,8 +36,9 @@
       <hr>
     </div>
     <div id="content" class="ticket">
-      <div id="errorbox"></div>
+      <div id="errorbox" class="system-message" style="display: none;"></div>
       <div id="ticketbox"></div>
+      <h2>Change History</h2>
       <div id="changelog"></div>
     </div>
 
