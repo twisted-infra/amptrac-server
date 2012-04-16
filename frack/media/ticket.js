@@ -3,7 +3,7 @@
 require(["dojo/string", "dojo/dom", "dojo/query",
          "dojo/rpc/JsonService", "dojo/io-query", 'dojo/date/locale',
          "/ui/mustache.js", "dojo/NodeList-manipulate",  "dojo/domReady!"],
-        function(string, dom, q, makeService, ioq, date) {
+        function(string, dom, q, makeService, ioq, date, Mustache) {
 
             /**
               * Find the target DOM node, its corresponding template,
