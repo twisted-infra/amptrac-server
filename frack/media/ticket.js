@@ -1,10 +1,20 @@
 // Copyright (c) Twisted Matrix Laboratories.
 // See LICENSE for details.
-require(["dojo/string", "dojo/query", "dojo/rpc/JsonService",
-         "dojo/io-query", 'dojo/date/locale',
-         "fracklets/TicketBox", "fracklets/ChangelogItem",
-         "dojo/NodeList-manipulate", "dojo/domReady!"],
-        function(string, q, makeService, ioq, date, TicketBox, ChangelogItem) {
+require(["dojo/string", "dojo/dom", "dojo/query",
+         "dojo/rpc/JsonService", "dojo/io-query", 'dojo/date/locale',
+         "/ui/mustache.js", "dojo/NodeList-manipulate",  "dojo/domReady!"],
+        function(string, dom, q, makeService, ioq, date) {
+
+            /**
+              * Find the target DOM node, its corresponding template,
+              * and fill the node with the template and data.
+             */
+            function fill(target, data) {
+                var templ = q("#" + target + "_template")[0].innerHTML;
+                var ctempl = Mustache.compile(templ, {"debug": false});
+                var rendered = ctempl(data);
+                q("#" + target).addContent(rendered);
+            }
 
             /** Format a UNIX time as a date. */
             function fromUNIXTime(time) {
@@ -16,6 +26,11 @@ require(["dojo/string", "dojo/query", "dojo/rpc/JsonService",
             function groupComments(changes) {
                 var commentnum = 1;
                 var commentgroups = [];
+                var setLineTempl = Mustache.compile(
+                    "set to <em>{{newvalue}}</em>");
+                var changedLineTempl = Mustache.compile(
+                    "changed from <em>{{oldvalue}}</em> to"
+                    + " <em>{{newvalue}}</em>");
                 changes.forEach(
                     function (change) {
                         var last = commentgroups[commentgroups.length - 1];
@@ -24,14 +39,22 @@ require(["dojo/string", "dojo/query", "dojo/rpc/JsonService",
                             last = {"commentnum": commentnum,
                                     "time": fromUNIXTime(change['time']),
                                     "unixtime": change['time'],
-                                    "author": change['author'],
-                                    "changes": []};
+                                    "author": change['author'], "changes": []};
                             commentgroups.push(last);
                             commentnum += 1;
                         }
                         if (change.field == 'comment') {
                             last.comment = change.newvalue;
                         } else {
+                            if (change.field == 'description') {
+                                change.changeline = "modified";
+                            } else if (!change.oldvalue) {
+                                change.changeline = setLineTempl(change);
+                            } else if (!change.newvalue) {
+                                change.changeline = "removed";
+                            } else {
+                                change.changeline = changedLineTempl(change);
+                            }
                             last.changes.push(change);
                         }
                     });
@@ -42,27 +65,19 @@ require(["dojo/string", "dojo/query", "dojo/rpc/JsonService",
             var queryString = document.location.search.substr(
                               document.location.search[0] === "?" ? 1 : 0);
             var urlQueryArgs = ioq.queryToObject(queryString);
-            var d = frack.callRemote("FetchTicket", {"id": Number(urlQueryArgs.id),
-                                                     "asHTML": true});
+            var d = frack.callRemote("FetchTicket", {"id": Number(urlQueryArgs.id), "asHTML": true});
 
             function showIt (response) {
-              q("title").text = string.substitute("#${0} (${1}) - Twisted",
-                                                  [response.id, response.summary]);
-              response["time"] = fromUNIXTime(response["time"]);
-              response["changetime"] = fromUNIXTime(response["changetime"]);
-              new TicketBox(response).placeAt(q("#ticketbox")[0]);
-              groupComments(response.changes).forEach(
-                function (commentgroup) {
-                  new ChangelogItem(commentgroup).placeAt(q("#changelog")[0]);
-                });
+                q("title").append(string.substitute("#${0} (${1}) - Twisted", [response.id, response.summary]));
+                response["time"] = fromUNIXTime(response["time"]);
+                response["changetime"] = fromUNIXTime(response["changetime"]);
+                fill("ticketbox", response);
+                fill("changelog", {"changes": groupComments(response.changes)});
             };
             d.addCallback(showIt);
 
             function displayError(e) {
-              var box = q("#errorbox")[0];
-              box.textContent = e;
-              box.style.display = 'block';
-
+                fill("errorbox", {"error": e});
             }
             d.addErrback(displayError);
 });
