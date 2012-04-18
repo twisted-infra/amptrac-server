@@ -16,6 +16,7 @@ try:
     from trac.wiki.formatter import format_to_html
     from trac.wiki.parser import WikiParser
     from trac.wiki.api import WikiSystem
+    from trac.wiki.interwiki import InterWikiMap
 except ImportError:
     trac = None
 
@@ -67,18 +68,25 @@ class AMPFace(amp.BoxDispatcher, amp.CommandLocator):
         def _cleanup(ticket):
             if asHTML:
                 if trac:
-                    self._rewriteTicket(ticket, trac_wiki_format)
+                    self._rewriteTicket(ticket, safeTrackWikiFormat)
                 else:
-                    self._rewriteTicket(ticket, plaintext_format)
+                    self._rewriteTicket(ticket, plaintextFormat)
             return ticket
         return d.addCallback(_cleanup).addErrback(log.err)
 
 
-def plaintext_format(txt):
+def plaintextFormat(txt):
     return '<pre style="white-space: pre-line">' + cgi.escape(txt) + '</pre>'
 
 
-def trac_wiki_format(txt):
+def safeTrackWikiFormat(txt):
+    try:
+        return tracWikiFormat(txt)
+    except Exception, e:
+        log.err(e)
+        return plaintextFormat(txt)
+
+def tracWikiFormat(txt):
     WikiSystem.safe_schemes = 'cvs,file,ftp,git,irc,http,https,news,sftp,smb,ssh,svn,svn+ssh'.split(',')
     #WikiSystem.syntax_providers = []
     class Env(object):
@@ -99,6 +107,7 @@ def trac_wiki_format(txt):
 
     env = Env()
     WikiParser.env = env
+    InterWikiMap.env = env
     return format_to_html(env, Context, txt, False)
 
 UNKNOWN_ERROR, UNHANDLED_ERROR_CODE = (-32603, -32601)
