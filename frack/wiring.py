@@ -5,25 +5,27 @@ try:
     import json
 except ImportError:
     import simplejson as json
-from twisted.protocols import amp
-from twisted.application.service import Service
+
+from twisted.internet import reactor
 from twisted.internet.protocol import ServerFactory
 from twisted.internet.endpoints import serverFromString
+from twisted.internet.defer import maybeDeferred
+from twisted.application.service import Service
+from twisted.protocols import amp
+from twisted.web import static
 from twisted.web.resource import Resource
 from twisted.web.server import NOT_DONE_YET, Site
-from twisted.internet.defer import maybeDeferred
-from twisted.internet import reactor
+
 from frack.responder import FrackResponder
 
 class AMPFactory(ServerFactory):
-    def __init__(self, store):
-        self.store = store
+    def __init__(self, responder):
+        self.responder = responder
 
 
     def buildProtocol(self, addr):
-        responder = FrackResponder(self.store)
-        disp = amp.BoxDispatcher(responder)
-        a = amp.AMP(boxReceiver=disp, locator=responder)
+        disp = amp.BoxDispatcher(self.responder)
+        a = amp.AMP(boxReceiver=disp, locator=self.responder)
         a.factory = self
         return a
 
@@ -31,26 +33,29 @@ class AMPFactory(ServerFactory):
 
 class AMPService(Service):
 
-    def __init__(self, port, store):
+    def __init__(self, port, responder):
         self.port = port
-        self.store = store
+        self.responder = responder
 
 
     def startService(self):
         self.endpoint = serverFromString(reactor, self.port)
-        self.endpoint.listen(AMPFactory(self.store))
+        self.endpoint.listen(AMPFactory(self.responder))
 
 
 
 class JSONRPCService(Service):
-    def __init__(self, port, store):
+    def __init__(self, port, responder, mediaPath):
         self.port = port
-        self.store = store
+        self.responder = responder
+        self.mediaPath = mediaPath
 
 
     def startService(self):
         self.endpoint = serverFromString(reactor, self.port)
-        self.root = JSONRPCFace(self.store)
+        self.root = Resource()
+        self.root.putChild('amp', JSONRPCFace(self.responder))
+        self.root.putChild('ui', static.File(self.mediaPath))
         self.site = Site(self.root)
         self.endpoint.listen(self.site)
 

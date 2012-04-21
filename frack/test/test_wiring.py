@@ -1,57 +1,14 @@
 import StringIO, json
 
 from twisted.trial import unittest
+from twisted.internet import defer
 from twisted.python.failure import Failure
-from twisted.protocols import amp
 from twisted.web.test.test_web import DummyRequest
 
 from frack.responder import FrackResponder, FetchTicket
 from frack.wiring import (JSONRPCFace, UNKNOWN_ERROR, PARSE_ERROR,
                           METHOD_NOT_FOUND, INVALID_REQUEST)
-
-FAKETICKET = {'id': 1,
-              'type': 'enhancement',
-              'time': 12345,
-              'component': 'web',
-              'priority': 'high',
-              'owner': 'washort',
-              'reporter': 'exarkun',
-              'cc': '',
-              'status': 'open',
-              'resolution': '',
-              'summary': 'Trac is down',
-              'description': "Let's throw it in the garbage.",
-              'keywords': 'trac easy',
-              'changes': [{'time': 123456,
-                           'author': 'washort',
-                           'field': 'comment',
-                           'oldvalue': '1',
-                           'newvalue': 'OK'}]}
-
-
-
-class TestCommands(unittest.TestCase):
-    """
-    Tests for behaviour of Frack AMP commands.
-    """
-
-    def test_fetchTicket(self):
-        """
-        The AMP responder for FetchTicket invokes the store's
-        `fetchTicket` method and passes the results to the client.
-        """
-        ticketid = 1
-        class FakeStore(object):
-            def fetchTicket(f, id):
-                self.assertEqual(id, ticketid)
-                return FAKETICKET
-        resp = FrackResponder(FakeStore())
-        box = FetchTicket.makeArguments({"id": 1}, None)
-        d = resp.locateResponder("FetchTicket")(box)
-        response = amp._stringsToObjects(d.result, FetchTicket.response,
-                                         None)
-        self.assertEqual(response, FAKETICKET)
-
+from frack.test.test_responder import FAKETICKET
 
 
 class JSONRPCTests(unittest.TestCase):
@@ -66,7 +23,7 @@ class JSONRPCTests(unittest.TestCase):
         """
         class FakeStore(object):
             def fetchTicket(f, id):
-                return response
+                return defer.succeed(response)
         f = FrackResponder(FakeStore())
         return JSONRPCFace(f)
 
@@ -77,8 +34,8 @@ class JSONRPCTests(unittest.TestCase):
         """
         face = self.mkface(FAKETICKET)
         m = face._locateResponder("FetchTicket")
-        d = m({"id": 1})
-        self.assertEqual(d, FAKETICKET)
+        d = m(id=1, asHTML=False)
+        self.assertEqual(d.result, FAKETICKET)
 
 
     def test_locate_success(self):
@@ -91,7 +48,8 @@ class JSONRPCTests(unittest.TestCase):
         req.content = StringIO.StringIO(json.dumps({"jsonrpc": "2.0",
                                                     "id": qid,
                                                     "method": "FetchTicket",
-                                                    "params": {"id": 1}}))
+                                                    "params": {"id": 1,
+                                                               "asHTML": False}}))
         f.render(req)
         response = json.loads(''.join(req.written))
         self.assertEquals(response, {"jsonrpc": "2.0",
@@ -130,8 +88,10 @@ class JSONRPCTests(unittest.TestCase):
         req.content = StringIO.StringIO(json.dumps({"jsonrpc": "2.0",
                                                     "id": qid,
                                                     "method": "FetchTicket",
-                                                    "params": {"id": -1}}))
+                                                    "params": {"id": -1,
+                                                               "asHTML": False}}))
         f.render(req)
+        self.flushLoggedErrors(RuntimeError)
         response = json.loads(''.join(req.written))
         self.assertEquals(response, {"jsonrpc": "2.0",
                                      "error":
