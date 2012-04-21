@@ -20,8 +20,8 @@ class FrackService(Service):
         self.store = DBStore(self.dbname)
         self.amp = AMPService(self.ampPort, self.store)
         self.amp.startService()
-        #self.jsonrpc = JSONRPCService(self.jsonRPCPort, self.store)
-        #self.jsonrpc.listen()
+        self.jsonrpc = JSONRPCService(self.jsonRPCPort, self.store)
+        self.jsonrpc.startService()
 
 
 

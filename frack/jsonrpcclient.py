@@ -1,38 +1,28 @@
 # Copyright (c) Twisted Matrix Laboratories.
 # See LICENSE for details.
 import pprint, sys, textwrap, time, datetime
+import simplejson as json
+from itertools import count
 from twisted.internet import reactor
-from twisted.internet.protocol import ClientFactory
-from twisted.internet.endpoints import clientFromString
+from twisted.web.client import getPage
 from twisted.protocols import amp
 from twisted.python import usage, log
-from frack.responder import FetchTicket
 
 def termsize():
     import fcntl, termios, struct
-    return struct.unpack('hh', fcntl.ioctl(1, termios.TIOCGWINSZ,
-                                           '1234'))
+    try:
+        return struct.unpack('hh', fcntl.ioctl(1, termios.TIOCGWINSZ,
+                                               '1234'))
+    except IOError:
+        return 24, 80
 
 
 
 class Options(usage.Options):
-    optParameters = [['port', 'p', 'tcp:localhost:1352', 'Service description for the AMP connector.']]
+    optParameters = [['uri', 'u', 'http://localhost:1353/', 'JSON-RPC URI.']]
 
     def parseArgs(self, id):
         self['id'] = int(id)
-
-
-
-class AMPClientFffffff(ClientFactory):
-    noisy = False
-    def __init__(self, cb):
-        self.cb = cb
-
-    def buildProtocol(self, addr):
-        self.p = amp.AMP()
-        self.p.factory = self
-        reactor.callLater(0, self.cb, self.p)
-        return self.p
 
 
 
@@ -82,13 +72,35 @@ def die(e):
 
 
 
+cc = count()
+
+def fetchTicket(id):
+    return json.dumps({'jsonrpc': '2.0',
+                       'method': 'FetchTicket',
+                       'params': {'id': id},
+                       'id': cc.next()})
+
+
+
+def decode(response):
+    r = json.loads(response)
+    if r.get('error'):
+        print 'omg', r['error']
+        reactor.stop()
+        raise RuntimeError(r['error'])
+    else:
+        return r['result']
+
+
+
 def main(config):
-    def fetch(p):
-        d = p.callRemote(FetchTicket, id=config['id'])
-        d.addCallback(format)
-        d.addCallback(lambda _: reactor.stop())
-        d.addErrback(die)
-    clientFromString(reactor, config['port']).connect(AMPClientFffffff(fetch))
+    msg = fetchTicket(config['id'])
+    d = getPage(config['uri'], method='POST', postdata=msg)
+    d.addCallback(decode)
+    d.addCallback(format)
+    d.addCallback(lambda _: reactor.stop())
+    d.addErrback(die)
+
     log.startLogging(sys.stdout)
     reactor.run()
 
