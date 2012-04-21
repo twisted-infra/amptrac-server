@@ -11,7 +11,7 @@ class DBTests(TestCase):
     """
 
     def setUp(self):
-        self.db = sqlite3.connect(":memory")
+        self.db = sqlite3.connect(":memory:")
         self.db.executescript(open(sibpath(__file__, "trac_test.sql")).read())
 
     def test_fetchTicket(self):

@@ -49,10 +49,8 @@ class FetchTicket(amp.Command):
 
 
 
-class AMPFace(amp.BoxDispatcher, amp.CommandLocator):
-
+class FrackResponder(amp.CommandLocator):
     def __init__(self, store):
-        amp.BoxDispatcher.__init__(self, self)
         self.store = store
 
     def _rewriteTicket(self, ticket, transform):
@@ -72,7 +70,13 @@ class AMPFace(amp.BoxDispatcher, amp.CommandLocator):
                 else:
                     self._rewriteTicket(ticket, plaintextFormat)
             return ticket
-        return d.addCallback(_cleanup).addErrback(log.err)
+        d.addCallback(_cleanup)
+
+        def _handleErr(e):
+            log.err(e)
+            return e
+        d.addErrback(_handleErr)
+        return d
 
 
 def plaintextFormat(txt):
@@ -109,71 +113,3 @@ def tracWikiFormat(txt):
     WikiParser.env = env
     InterWikiMap.env = env
     return format_to_html(env, Context, txt, False)
-
-UNKNOWN_ERROR, UNHANDLED_ERROR_CODE = (-32603, -32601)
-
-class JSONRPCFace(Resource):
-
-    def __init__(self, store):
-        Resource.__init__(self)
-        self.ampface = AMPFace(store)
-
-
-    def _serialize(self, response, request):
-        request.write(json.dumps(response))
-        request.finish()
-
-
-    def _err(self, failure, request, qid):
-        return self._fail(request, UNKNOWN_ERROR,
-                          str(failure.value), qid)
-
-
-    def _fail(self, request, code, msg, qid):
-        self._serialize({"jsonrpc": "2.0",
-                         "error":
-                             {"code": code,
-                              "message": msg},
-                         "id": qid},
-                        request)
-
-
-    def _succeed(self, result, request, qid):
-        self._serialize({"jsonrpc": "2.0",
-                         "result": result,
-                         "id": qid},
-                        request)
-
-
-    def _locateResponder(self, name):
-        cd = self.ampface._commandDispatch
-        if name in cd:
-            commandClass, responderFunc = cd[name]
-            responderMethod = types.MethodType(
-                responderFunc, self.ampface, AMPFace)
-            return responderMethod
-
-    def render(self, request):
-        q = json.loads(request.content.read())
-        qid = q.get('id')
-        resp = self._locateResponder(q['method'])
-        if resp is None:
-            self._fail(request, UNHANDLED_ERROR_CODE,
-            "Unhandled Command: %r" % (q['method'],), qid)
-        else:
-            self._invoke(request, resp, q['params'], qid)
-        return NOT_DONE_YET
-
-
-    def _invoke(self, request, responder, params, qid):
-        d = maybeDeferred(responder, **dict([(k.encode('ascii'), v) for (k, v) in params.iteritems()]))
-        d.addCallback(self._succeed, request, qid)
-        d.addErrback(self._err, request, qid)
-        return d
-
-
-    def getChild(self, path, request):
-        if path == '':
-            return self
-        else:
-            return Resource.getChild(self, path, request)

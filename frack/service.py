@@ -5,12 +5,14 @@ from twisted.python import usage
 from twisted.application.service import Service
 from twisted.python.util import sibpath
 from frack.db import DBStore, sqlite_connect, postgres_probably_connect
+from frack.responder import FrackResponder
 from frack.wiring import AMPService, JSONRPCService
 
 class FrackService(Service):
 
     def __init__(self, dbconnection, ampPort, jsonRPCPort, mediaPath):
         self.store = DBStore(dbconnection)
+        self.responder = FrackResponder(self.store)
         self.ampPort = ampPort
         self.jsonRPCPort = jsonRPCPort
         self.mediaPath = mediaPath
@@ -19,10 +21,11 @@ class FrackService(Service):
 
 
     def startService(self):
-        self.amp = AMPService(self.ampPort, self.store)
+        self.amp = AMPService(self.ampPort, self.responder)
         self.amp.startService()
 
-        self.jsonrpc = JSONRPCService(self.jsonRPCPort, self.store, self.mediaPath)
+        self.jsonrpc = JSONRPCService(self.jsonRPCPort, self.responder,
+                                      self.mediaPath)
         self.jsonrpc.startService()
 
 

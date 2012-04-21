@@ -49,10 +49,12 @@ def format(response):
     height, width = termsize()
     response['time'] = convertTime(response['time'])
     headline = "* #%(id)s - %(owner)s - %(summary)s [%(status)s] - " % response
-    subline = "`-- keywords: %(keywords)s reporter: %(reporter)s component: %(component)s" % response
+    subline = ("`-- keywords: %(keywords)s reporter: %(reporter)s"
+               " component: %(component)s" % response)
     indent = " " * 4
-    body = textwrap.wrap(response['description'], width=width - 8, replace_whitespace=False,
-                         initial_indent=indent, subsequent_indent=indent)
+    body = textwrap.wrap(response['description'], width=width - 8,
+                         replace_whitespace=False, initial_indent=indent,
+                         subsequent_indent=indent)
 
     changes = ['\n']
     for item in response['changes']:
@@ -63,8 +65,10 @@ def format(response):
             changes.extend(comment)
             changes.append('\n')
         else:
-            changes.append('# %(author)s changed %(field)s: %(oldvalue)s -> %(newvalue)s' % item)
-    sys.__stdout__.write('\n'.join([headline, subline] + body + changes + ['\n']))
+            changes.append('# %(author)s changed %(field)s: %(oldvalue)s '
+                           '-> %(newvalue)s' % item)
+    sys.__stdout__.write('\n'.join([headline, subline] + body + changes +
+                                   ['\n']))
 
 
 
