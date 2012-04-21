@@ -29,10 +29,8 @@ class FetchTicket(amp.Command):
 
 
 
-class AMPFace(amp.BoxDispatcher, amp.CommandLocator):
-
+class FrackResponder(amp.CommandLocator):
     def __init__(self, store):
-        amp.BoxDispatcher.__init__(self, self)
         self.store = store
 
 
@@ -49,8 +47,9 @@ class AMPFactory(ServerFactory):
 
 
     def buildProtocol(self, addr):
-        face = AMPFace(self.store)
-        a = amp.AMP(boxReceiver=face, locator=face)
+        responder = FrackResponder(self.store)
+        disp = amp.BoxDispatcher(responder)
+        a = amp.AMP(boxReceiver=disp, locator=responder)
         a.factory = self
         return a
 
