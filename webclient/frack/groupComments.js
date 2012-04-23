@@ -38,5 +38,5 @@ define(["frack/mustache", "dojo/date/locale"], function (Mustache, date) {
                }
              });
            return commentgroups;
-         }
+         };
 });

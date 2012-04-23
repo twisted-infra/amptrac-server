@@ -1,7 +1,8 @@
 require(
-  ["doh/runner", "frack/groupComments"],
-  function (doh, groupComments) {
+  ["doh/runner", "dojo/_base/kernel", "frack/groupComments"],
+  function (doh, dojo, groupComments) {
     "use strict";
+    dojo.locale = 'en';
     doh.register("groupComments",
       [function test_description(self) {
          var change = {"author": "jethro",
@@ -9,16 +10,19 @@ require(
                        "newvalue": "description new version etc",
                        "time": 1000000000,
                        "oldvalue": "description old version etc"};
-         var fakechanges = [Object.create(change)];
-         var newchange = Object.create(change);
-         newchange.changeline = "modified";
-         var groups = groupComments(fakechanges);
+         var newchange = {"author": "jethro",
+                          "field": "description",
+                          "newvalue": "description new version etc",
+                          "time": 1000000000,
+                          "oldvalue": "description old version etc",
+                          "changeline": "modified"};
+         var groups = groupComments([change]);
          self.assertEqual(groups, [{"commentnum": 1,
-                                    "time": "2001-09-08 20:46",
+                                    "time": "9/8/01 8:46 PM",
                                     "unixtime": 1000000000,
                                     "author": "jethro",
-                                    "changes": [newchange]}]);
-
+                                    "changes": [newchange]}],
+                         groups.toSource());
       },
        function test_comment(self) {
          var comment = "super great comment";
@@ -27,14 +31,13 @@ require(
                        "newvalue": comment,
                        "time": 1000000000,
                        "oldvalue": "1"};
-         var fakechanges = [change];
-         var groups = groupComments(fakechanges);
+         var groups = groupComments([change]);
          self.assertEqual(groups, [{"commentnum": 1,
-                                               "time": "2001-09-08 20:46",
-                                               "unixtime": 1000000000,
-                                               "author": "jethro",
-                                               "changes": [],
-                                               "comment": comment}]);
+                                    "time": "9/8/01 8:46 PM",
+                                    "unixtime": 1000000000,
+                                    "author": "jethro",
+                                    "changes": [],
+                                    "comment": comment}]);
        },
        function test_propUpdate(self) {
          var oldks = "trac";
@@ -44,16 +47,19 @@ require(
                        "oldvalue": oldks,
                        "newvalue": newks,
                        "time": 1000000000};
-         var fakechanges = [Object.create(change)];
-         var newchange = Object.create(change);
-         newchange.changeline = ("changed from <em>trac</em> to "
-                                + "<em>trac &lt;easy&gt;</em>");
-         var groups = groupComments(fakechanges);
+         var newchange = {"author": "jethro",
+                          "field": "keywords",
+                          "oldvalue": oldks,
+                          "newvalue": newks,
+                          "time": 1000000000,
+                          changeline: ("changed from <em>trac</em> to "
+                                       + "<em>trac &lt;easy&gt;</em>")};
+         var groups = groupComments([change]);
          self.assertEqual(groups, [{"commentnum": 1,
-                                               "time": "2001-09-08 20:46",
-                                               "unixtime": 1000000000,
-                                               "author": "jethro",
-                                               "changes": [newchange]}]);
+                                    "time": "9/8/01 8:46 PM",
+                                    "author": "jethro",
+                                    "unixtime": 1000000000,
+                                    "changes": [newchange]}]);
        }
       ]);
   });
