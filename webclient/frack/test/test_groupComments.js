@@ -60,6 +60,74 @@ require(
                                     "author": "jethro",
                                     "unixtime": 1000000000,
                                     "changes": [newchange]}]);
+       },
+       function test_delete(self) {
+         var change = {"author": "jethro",
+                       "field": "keywords",
+                       "oldvalue": "web",
+                       "newvalue": "",
+                       "time": 1000000000};
+         var newchange = {"author": "jethro",
+                          "field": "keywords",
+                          "oldvalue": "web",
+                          "newvalue": "",
+                          "time": 1000000000,
+                          changeline: "removed"};
+         var groups = groupComments([change]);
+         self.assertEqual(groups, [{"commentnum": 1,
+                                    "time": "9/8/01 8:46 PM",
+                                    "author": "jethro",
+                                    "unixtime": 1000000000,
+                                    "changes": [newchange]}]);
+       },
+       function test_group(self) {
+         var changes = [{"author": "jethro",
+                          "field": "keywords",
+                         "oldvalue": "web",
+                         "newvalue": "",
+                         "time": 1000000000},
+                        {"author": "jethro",
+                          "field": "comment",
+                         "oldvalue": "1",
+                         "newvalue": "a comment",
+                         "time": 1000000000},
+                        {"author": "jethro",
+                         "field": "branch",
+                         "oldvalue": "",
+                         "newvalue": "branches/somecode",
+                         "time": 1000000000},
+                        {"author": "bob",
+                          "field": "comment",
+                         "oldvalue": "2",
+                         "newvalue": "another comment",
+                         "time": 1000000000}
+                       ];
+         var firstchanges = [
+           {"author": "jethro",
+            "changeline": "removed",
+            "field": "keywords",
+            "oldvalue": "web",
+            "newvalue": "",
+            "time": 1000000000},
+           {"author": "jethro",
+            "changeline": "set to <em>branches/somecode</em>",
+            "field": "branch",
+            "oldvalue": "",
+            "newvalue": "branches/somecode",
+            "time": 1000000000}];
+         var groups = groupComments(changes);
+         self.assertEqual(groups, [{"commentnum": 1,
+                                    "time": "9/8/01 8:46 PM",
+                                    "author": "jethro",
+                                    "comment": "a comment",
+                                    "unixtime": 1000000000,
+                                    "changes": firstchanges},
+                                   {"commentnum": 2,
+                                    "time": "9/8/01 8:46 PM",
+                                    "author": "bob",
+                                    "comment": "another comment",
+                                    "unixtime": 1000000000,
+                                    "changes": []}]);
        }
       ]);
   });

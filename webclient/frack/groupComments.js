@@ -12,6 +12,7 @@ define(["frack/mustache", "dojo/date/locale"], function (Mustache, date) {
                + " <em>{{newvalue}}</em>");
            changes.forEach(
              function (change) {
+               console.log("CHAYNGE");
                var last = commentgroups[commentgroups.length - 1];
                if (!last || change.author != last.author
                    || change.time != last.unixtime) {
