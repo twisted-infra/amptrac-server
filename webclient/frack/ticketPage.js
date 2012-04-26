@@ -1,6 +1,6 @@
 define(
   ["dojo/string", "dojo/_base/query", "dojo/date/locale",
-   "mustache",  "frack/groupComments",
+   "frack/mustache",  "frack/groupComments",
    "dojo/text!./resources/ticketbox.html",
    "dojo/text!./resources/changelog.html",
    "dojo/NodeList-manipulate"],

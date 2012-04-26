@@ -3,6 +3,7 @@ require({
           packages: [
             'dojo',
             'frack'],
-          cache: {}
+          cache: {},
+          selectorEngine: 'lite'
         },
         ['frack']);
