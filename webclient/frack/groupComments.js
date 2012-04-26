@@ -1,5 +1,4 @@
-define(["frack/mustache", "dojo/date/locale"], function (Mustache, date) {
-         "use strict";
+define(["mustache", "dojo/date/locale"], function (Mustache, date) {
          /** Group change entries into comment boxes by author and
           * time. */
          return function groupComments(changes) {

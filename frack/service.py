@@ -48,10 +48,12 @@ class Options(usage.Options):
                      ['jsonrpc', 'j', 'tcp:1353',
                       'Service description for the JSON-RPC listener.'],
 
-                     ['mediapath', 'p', sibpath(__file__, 'media'),
+                     ['mediapath', 'p',
+                      os.path.join(os.path.dirname(
+                    os.path.dirname(os.path.abspath(__file__))), 'webclient'),
                       'Location of media files for web UI.']]
 
-    longdesc = """Like that other issue tracker, but with different emotions."""
+    longdesc = """A postmodern deconstruction of the Python web-based issue tracker."""
 
 
 
