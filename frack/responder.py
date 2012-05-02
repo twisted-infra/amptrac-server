@@ -1,12 +1,14 @@
 # Copyright (c) Twisted Matrix Laboratories.
 # See LICENSE for details.
 import types
+from urllib import quote_plus as qp
 try:
     import json
 except ImportError:
     import simplejson as json
 import cgi
 from twisted.protocols import amp
+from twisted.web.client import getPage
 from twisted.web.server import NOT_DONE_YET
 from twisted.web.resource import Resource
 from twisted.internet.defer import maybeDeferred
@@ -48,10 +50,19 @@ class FetchTicket(amp.Command):
                                          ('newvalue', amp.Unicode())]))]
 
 
+class BrowserIDLogin(amp.Command):
+    arguments = [('assertion', amp.Unicode())]
+    response = [('email', amp.Unicode()),
+                ('username', amp.Unicode()),
+                ('key', amp.Unicode())]
+
+
 
 class FrackResponder(amp.CommandLocator):
-    def __init__(self, store):
+    def __init__(self, store, baseUrl):
         self.store = store
+        self.baseUrl = baseUrl
+
 
     def _rewriteTicket(self, ticket, transform):
         ticket['description'] = transform(ticket['description'])
@@ -66,7 +77,7 @@ class FrackResponder(amp.CommandLocator):
         def _cleanup(ticket):
             if asHTML:
                 if trac:
-                    self._rewriteTicket(ticket, safeTrackWikiFormat)
+                    self._rewriteTicket(ticket, safeTracWikiFormat)
                 else:
                     self._rewriteTicket(ticket, plaintextFormat)
             return ticket
@@ -78,12 +89,29 @@ class FrackResponder(amp.CommandLocator):
         d.addErrback(_handleErr)
         return d
 
+    @BrowserIDLogin.responder
+    def browserIDLogin(self, assertion):
+        d = getPage("https://browserid.org/verify?audience=%s&assertion=%s"
+                    % ( self.baseUrl, qp(assertion)), method="POST")
+        def _collect(resultData):
+            result = json.loads(resultData)
+            if result['status'] != 'okay':
+                return {'ok': False, 'email': ''}
+            return (self.store.lookupByEmail(result['email'])
+                    .addCallback(_gotUser, {'ok': True, 'email': result['email']}))
+        def _gotUser((key, username), result):
+            result['username'] = username
+            result['key'] = key
+            return result
+        return d.addCallback(_collect)
+
+
 
 def plaintextFormat(txt):
     return '<pre style="white-space: pre-line">' + cgi.escape(txt) + '</pre>'
 
 
-def safeTrackWikiFormat(txt):
+def safeTracWikiFormat(txt):
     try:
         return tracWikiFormat(txt)
     except Exception, e:

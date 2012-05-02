@@ -1,6 +1,6 @@
 # Copyright (c) Twisted Matrix Laboratories.
 # See LICENSE for details.
-import os, pwd
+import os, pwd, socket
 from twisted.python import usage
 from twisted.application.service import Service
 from twisted.python.util import sibpath
@@ -10,9 +10,10 @@ from frack.wiring import AMPService, JSONRPCService
 
 class FrackService(Service):
 
-    def __init__(self, dbconnection, ampPort, jsonRPCPort, mediaPath):
+    def __init__(self, dbconnection, ampPort, jsonRPCPort, mediaPath,
+                 baseUrl):
         self.store = DBStore(dbconnection)
-        self.responder = FrackResponder(self.store)
+        self.responder = FrackResponder(self.store, baseUrl)
         self.ampPort = ampPort
         self.jsonRPCPort = jsonRPCPort
         self.mediaPath = mediaPath
@@ -51,7 +52,9 @@ class Options(usage.Options):
                      ['mediapath', 'p',
                       os.path.join(os.path.dirname(
                     os.path.dirname(os.path.abspath(__file__))), 'webclient'),
-                      'Location of media files for web UI.']]
+                      'Location of media files for web UI.'],
+                     ['baseUrl', 'b', 'http://%s:1353/' % (socket.getfqdn(),),
+                      'Domain web client will be accessed from']]
 
     longdesc = """A postmodern deconstruction of the Python web-based issue tracker."""
 
@@ -72,4 +75,5 @@ def makeService(config):
     return FrackService(dbconnection=connection,
                         ampPort=config['amp'],
                         jsonRPCPort=config['jsonrpc'],
-                        mediaPath=config['mediapath'])
+                        mediaPath=config['mediapath'],
+                        baseUrl=config['baseUrl'])
