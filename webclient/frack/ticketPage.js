@@ -32,7 +32,7 @@ define(
       },
 
       renderError: function displayError(e) {
-        var box = q("errorbox");
+        var box = q("#errorbox");
         box.addClass("system-message");
         box.text(e);
       }

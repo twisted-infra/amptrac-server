@@ -82,4 +82,4 @@ class DBStore(object):
                       (key, username, int(time.time())))
         else:
             key = result[0][0]
-        return (key, username)
+        return defer.succeed((key, username))
