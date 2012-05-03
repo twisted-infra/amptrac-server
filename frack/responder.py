@@ -8,7 +8,7 @@ except ImportError:
     import simplejson as json
 import cgi
 from twisted.protocols import amp
-from twisted.web.client import getPage
+from twisted.web import client
 from twisted.web.server import NOT_DONE_YET
 from twisted.web.resource import Resource
 from twisted.internet.defer import maybeDeferred
@@ -89,10 +89,11 @@ class FrackResponder(amp.CommandLocator):
         d.addErrback(_handleErr)
         return d
 
+
     @BrowserIDLogin.responder
     def browserIDLogin(self, assertion):
-        d = getPage("https://browserid.org/verify?audience=%s&assertion=%s"
-                    % ( self.baseUrl, qp(assertion)), method="POST")
+        d = client.getPage("https://browserid.org/verify?audience=%s&assertion=%s"
+                           % ( self.baseUrl, qp(assertion)), method="POST")
         def _collect(resultData):
             result = json.loads(resultData)
             if result['status'] != 'okay':

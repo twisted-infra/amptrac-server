@@ -24,7 +24,7 @@ class JSONRPCTests(unittest.TestCase):
         class FakeStore(object):
             def fetchTicket(f, id):
                 return defer.succeed(response)
-        f = FrackResponder(FakeStore())
+        f = FrackResponder(FakeStore(), '')
         return JSONRPCFace(f)
 
     def test_locateResponder(self):

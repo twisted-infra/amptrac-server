@@ -35,3 +35,16 @@ class DBTests(TestCase):
                              {"newvalue", "author", "oldvalue", "time", "field"})
 
         return d.addCallback(_check)
+
+
+    def test_lookupByEmail(self):
+        """
+        `lookupByEmail` looks up a session key and username by the
+        email associated with it.
+        """
+        store = DBStore((sqlite3, self.db))
+        d = store.lookupByEmail('alice@example.com')
+        def _check(result):
+            self.assertEqual(result, ('a331422278bd676f3809e7a9d8600647',
+                                      'alice'))
+        return d.addCallback(_check)
