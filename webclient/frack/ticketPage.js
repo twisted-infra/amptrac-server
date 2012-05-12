@@ -21,6 +21,9 @@ define(
     }
 
     return {
+      /**
+       * Fill templates with data from FetchTicket and display them.
+       */
       renderTicket: function (response) {
         q("title").append(
           string.substitute("#${0} (${1}) - Twisted",
@@ -30,7 +33,9 @@ define(
         fill("ticketbox", ticketbox, response);
         fill("changelog", changelog, {"changes": groupComments(response.changes)});
       },
-
+      /**
+       * Show some error text in the page.
+       */
       renderError: function displayError(e) {
         var box = q("#errorbox");
         box.addClass("system-message");

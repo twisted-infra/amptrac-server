@@ -2,12 +2,19 @@ define(
   ["dojo/io-query", "dojo/_base/query",
    "frack/service", "frack/browserid",
    "frack/ticketPage", "dojo/domReady!"],
+  /**
+   * Entry point for ticket page. Hook up BrowserID auth and fetch
+   * ticket.
+   */
   function (ioq, q, service, browserid, ticketPage) {
     var endLi = q("#metanav .last");
     var target = q("#login-indicator");
     function validate (a) {
       return service.browserIDLogin(a);
     }
+    /**
+     * Hook up the logout button and store credentials.
+     */
     function onLogin(response) {
       var logoutButton = q(document.createElement("li"));
       logoutButton.attr("id", "logout-button");
@@ -21,6 +28,9 @@ define(
       return logoutButton;
 
     };
+    /**
+     * Display login button and scrub credentials.
+     */
     function onLogout() {
       q("#logout-button").remove();
       target.innerHTML("<a href='#'>Login / Register</a>");

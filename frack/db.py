@@ -3,6 +3,9 @@
 from twisted.internet import defer
 
 def postgres_probably_connect(name, username):
+    """
+    Connect to postgres or die trying.
+    """
     try:
         import pgdb
     except ImportError:
@@ -27,6 +30,11 @@ def sqlite_connect(path):
 
 
 class DBStore(object):
+    """
+    Abstract access to Trac's SQL database.
+
+    @param connection: A Python DB-API database connection.
+    """
     def __init__(self, connection):
         module, self.connection = connection
         if module.paramstyle == 'qmark':
@@ -35,9 +43,15 @@ class DBStore(object):
             self.pl = '%s'
 
     def q(self, query):
+        """
+        Replace ? in SQL strings with the db driver's placeholder.
+        """
         return query.replace('?', self.pl)
 
     def fetchTicket(self, ticketNumber):
+        """
+        Look up a ticket and its concomitant changes and attachments.
+        """
         c = self.connection.cursor()
         c.execute(self.q(
                 "SELECT id, type, time, changetime, component, priority, owner,"
@@ -67,6 +81,9 @@ class DBStore(object):
 
 
     def lookupByEmail(self, email):
+        """
+        Find a username by looking up the associated email address.
+        """
         c = self.connection.cursor()
         c.execute(self.q("SELECT sid from session_attribute where name = 'email' and authenticated = 1 and value = ?"), (email,))
         result = c.fetchall()

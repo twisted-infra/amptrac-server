@@ -1,5 +1,8 @@
 define(
   ["dojo/rpc/JsonService"],
+  /**
+   * JSON-RPC request methods.
+   */
   function (makeService) {
     var frack = makeService({"serviceUrl": "/amp"});
     return {

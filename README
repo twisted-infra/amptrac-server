@@ -1,0 +1,20 @@
+# -*- mode: org -*-
+
+* Frack, A Completely Ridiculous Issue Tracker
+I wrote this because twistedmatrix.com has a Trac instance full of
+valuable data, and Trac has become increasingly annoying over the past
+7 years. Frack is an attempt to provide a better face on that data.
+
+** How It Works
+Frack provides AMP and JSON-RPC listeners in a Twisted-based server,
+and a browser-based client.
+
+*** Server
+AMP commands in frack.responder define the interface for working with
+ticket data. A JSON-RPC wrapper uses these same command objects to
+define an HTTP-friendly interface.
+
+*** Client
+The web client lives in `webclient` and uses Dojo and Mustache. HTML
+templating is done client side and communication with the server is
+via JSON-RPC. BrowserID is used for authentication.

@@ -1,5 +1,10 @@
 # Copyright (c) Twisted Matrix Laboratories.
 # See LICENSE for details.
+
+"""
+Definitions of AMP commands for Frack and responders for them.
+"""
+
 import types
 from urllib import quote_plus as qp
 try:
@@ -23,6 +28,16 @@ except ImportError:
     trac = None
 
 class FetchTicket(amp.Command):
+    """
+    Requests ticket info from data store.
+
+    @param id: The ticket ID to look up
+
+    @param asHTML: Whether to render comments/description as HTML or
+    not. Will use Trac wiki formatting if available.
+
+    Returns all ticket fields, including a list of comments/changes.
+    """
     arguments = [('id', amp.Integer()),
                  ('asHTML', amp.Boolean())]
     response = [('id', amp.Integer()),
@@ -51,6 +66,15 @@ class FetchTicket(amp.Command):
 
 
 class BrowserIDLogin(amp.Command):
+    """
+    Verifies a BrowserID assertion and looks up a user account. If not
+    found, a new one for the given email address is created.
+
+    @param assertion: Assertion blob from BrowserID service.
+
+    Returns the user's email and username, and a key to be used in
+    further commands.
+    """
     arguments = [('assertion', amp.Unicode())]
     response = [('email', amp.Unicode()),
                 ('username', amp.Unicode()),
@@ -59,6 +83,15 @@ class BrowserIDLogin(amp.Command):
 
 
 class FrackResponder(amp.CommandLocator):
+    """
+    Home to responders for Frack's AMP/JSON-RPC commands.
+
+    @param store: A data store object, probably a wrapper for a Trac DB.
+
+    @param baseUrl: The URL the web client is available at. (Used by
+    BrowserID's "audience" parameter to indicate the site login is
+    being done for.)
+    """
     def __init__(self, store, baseUrl):
         self.store = store
         self.baseUrl = baseUrl
@@ -73,6 +106,9 @@ class FrackResponder(amp.CommandLocator):
 
     @FetchTicket.responder
     def fetchTicket(self, id, asHTML):
+        """
+        @see: L{FetchTicket}
+        """
         d = self.store.fetchTicket(id)
         def _cleanup(ticket):
             if asHTML:
@@ -92,6 +128,9 @@ class FrackResponder(amp.CommandLocator):
 
     @BrowserIDLogin.responder
     def browserIDLogin(self, assertion):
+        """
+        @see: L{BrowserIDLogin}
+        """
         d = client.getPage("https://browserid.org/verify?audience=%s&assertion=%s"
                            % ( self.baseUrl, qp(assertion)), method="POST")
         def _collect(resultData):

@@ -1,5 +1,11 @@
 # Copyright (c) Twisted Matrix Laboratories.
 # See LICENSE for details.
+
+"""
+Components for connecting responder code to AMP and JSON-RPC network
+transports.
+"""
+
 import types
 try:
     import json
@@ -19,6 +25,12 @@ from twisted.web.server import NOT_DONE_YET, Site
 from frack.responder import FrackResponder
 
 class AMPFactory(ServerFactory):
+    """
+    Factory for listening for AMP requests.
+
+    @param responder: An object that provides responders to AMP
+    commands.
+    """
     def __init__(self, responder):
         self.responder = responder
 
@@ -32,7 +44,14 @@ class AMPFactory(ServerFactory):
 
 
 class AMPService(Service):
+    """
+    Service for AMP listener.
 
+    @param port: An endpoint description, suitable for
+    `serverToString`.
+
+    @param responder: An object providing responders for AMP commands.
+    """
     def __init__(self, port, responder):
         self.port = port
         self.responder = responder
@@ -45,6 +64,16 @@ class AMPService(Service):
 
 
 class JSONRPCService(Service):
+    """
+    Service for JSON-RPC listener and web client.
+
+    @param port: An endpoint description, suitable for
+    `serverToString`.
+
+    @param responder: An object providing responders for AMP commands.
+
+    @param mediaPath: A filesystem path containing web client files.
+    """
     def __init__(self, port, responder, mediaPath):
         self.port = port
         self.responder = responder
@@ -67,6 +96,11 @@ class JSONRPCService(Service):
       -32603, -32601)
 
 class JSONRPCFace(Resource):
+    """
+    A wrapper providing JSON-RPC access to AMP commands.
+
+    @param responder: An object providing responders for AMP commands.
+    """
 
     def __init__(self, responder):
         Resource.__init__(self)
