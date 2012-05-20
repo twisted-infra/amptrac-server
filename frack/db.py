@@ -1,6 +1,13 @@
 # Copyright (c) Twisted Matrix Laboratories.
 # See LICENSE for details.
+import time
 from twisted.internet import defer
+
+class UnauthorizedError(Exception):
+    """
+    The given key wasn't acceptable for the requested operation.
+    """
+
 
 def postgres_probably_connect(name, username):
     """
@@ -100,3 +107,82 @@ class DBStore(object):
         else:
             key = result[0][0]
         return defer.succeed((key, username))
+
+
+    def _auth(self, key):
+        c = self.connection.cursor()
+        c.execute(self.q("SELECT name from auth_cookie where cookie = ?"), (key,))
+        data = c.fetchall()
+        if not data:
+            return None
+        else:
+            return data[0][0]
+
+    def updateTicket(self, key, id, data):
+        """
+        Change a ticket's fields and add to its change log.
+        """
+        customfields =  ('branch', 'branch_author', 'launchpad_bug')
+        fields = ('type', 'component', 'priority', 'owner', 'reporter',
+                  'cc', 'status', 'resolution', 'summary', 'description',
+                  'keywords')
+        comment = data.get('comment')
+        customdata = dict((k, v) for (k, v) in data.iteritems()
+                          if k in customfields
+                             and v is not None)
+        data = dict((k, v) for (k, v) in data.iteritems() if k in fields
+                                                             and v is not None)
+        username = self._auth(key)
+        if not username:
+            return defer.fail(UnauthorizedError())
+        try:
+            c = self.connection.cursor()
+            c.execute(self.q("SELECT %s from ticket where id = ?"
+                             % (','.join(data.keys()),)),
+                      (id,))
+            oldversion = dict(zip(data.keys(), c.fetchone()))
+            c.execute(self.q("SELECT name, value from ticket_custom where ticket = ?"),
+                      (id,))
+            bits = c.fetchall()
+            oldversion.update(dict.fromkeys(customfields, ''))
+            oldversion.update(bits)
+            t = time.time()
+            c.execute(self.q("UPDATE ticket SET %s, changetime=? WHERE id = ?"
+                             % ','.join(k + "=?" for k in data)),
+                      data.values() + [t, id])
+            changes = data.copy()
+            changes.update(customdata)
+            for k in changes:
+                if oldversion[k] != changes[k]:
+                    c.execute(self.q("""INSERT INTO ticket_change
+                                   (ticket, time, author, field, oldvalue, newvalue)
+                                   VALUES (?, ?, ?, ?, ?, ?)"""),
+                              [id, t, username, k, oldversion[k], changes[k]])
+
+            for k in customdata:
+                if customdata[k] != oldversion[k]:
+                    c.execute(self.q("""UPDATE ticket_custom SET value=?
+                                    WHERE ticket=? and name=?"""),
+                              (customdata[k], id, k))
+                    c.execute(self.q("""INSERT INTO ticket_custom
+                                    (value, ticket, name)
+                                    SELECT ?, ?, ? WHERE NOT EXISTS
+                                   (SELECT 1 FROM ticket_custom WHERE ticket=?
+                                                                AND name=?)"""),
+                              (customdata[k], id, k, id, k))
+
+            c.execute(self.q("""SELECT max(CAST (oldvalue AS float))
+                                    from ticket_change where ticket=?
+                                                         and field='comment'
+                                                         and oldvalue != ''"""),
+                      (id,))
+            lastcommentnum = int(c.fetchone()[0])
+            c.execute(self.q("""INSERT INTO ticket_change
+                                (ticket, time, author, field, oldvalue, newvalue)
+                                VALUES (?, ?, ?, 'comment', ?, ?)"""),
+                      [id, t, username, lastcommentnum, comment or ''])
+            self.connection.commit()
+        except:
+            self.connection.rollback()
+            raise
+        return defer.succeed(None)

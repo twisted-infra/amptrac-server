@@ -39,7 +39,7 @@ class FetchTicket(amp.Command):
     Returns all ticket fields, including a list of comments/changes.
     """
     arguments = [('id', amp.Integer()),
-                 ('asHTML', amp.Boolean())]
+                 ('asHTML', amp.Boolean(optional=True))]
     response = [('id', amp.Integer()),
                 ('type', amp.Unicode()),
                 ('time', amp.Integer()),
@@ -53,6 +53,7 @@ class FetchTicket(amp.Command):
                 ('resolution', amp.Unicode()),
                 ('summary', amp.Unicode()),
                 ('description', amp.Unicode()),
+                ('raw_description', amp.Unicode()),
                 ('keywords', amp.Unicode()),
                 ('branch', amp.Unicode()),
                 ('branch_author', amp.Unicode()),
@@ -82,6 +83,30 @@ class BrowserIDLogin(amp.Command):
 
 
 
+class UpdateTicket(amp.Command):
+    """
+    Updates a ticket in the data store with new values for fields.
+    """
+    arguments = [('id', amp.Integer()),
+                 ('key', amp.Unicode()),
+                 ('type', amp.Unicode(optional=True)),
+                 ('component', amp.Unicode(optional=True)),
+                 ('priority', amp.Unicode(optional=True)),
+                 ('owner', amp.Unicode(optional=True)),
+                 ('reporter', amp.Unicode(optional=True)),
+                 ('cc', amp.Unicode(optional=True)),
+                 ('status', amp.Unicode(optional=True)),
+                 ('resolution', amp.Unicode(optional=True)),
+                 ('summary', amp.Unicode(optional=True)),
+                 ('description', amp.Unicode(optional=True)),
+                 ('keywords', amp.Unicode(optional=True)),
+                 ('branch', amp.Unicode(optional=True)),
+                 ('branch_author', amp.Unicode(optional=True)),
+                 ('launchpad_bug', amp.Unicode(optional=True)),
+                 ('comment', amp.Unicode(optional=True))]
+
+
+
 class FrackResponder(amp.CommandLocator):
     """
     Home to responders for Frack's AMP/JSON-RPC commands.
@@ -98,6 +123,7 @@ class FrackResponder(amp.CommandLocator):
 
 
     def _rewriteTicket(self, ticket, transform):
+        ticket['raw_description'] = ticket['description']
         ticket['description'] = transform(ticket['description'])
         for change in ticket['changes']:
             if change['field'] == 'comment':
@@ -145,6 +171,11 @@ class FrackResponder(amp.CommandLocator):
             return result
         return d.addCallback(_collect)
 
+
+    @UpdateTicket.responder
+    def updateTicket(self, key, id, **kwargs):
+        self.store.updateTicket(key, id, kwargs)
+        return {}
 
 
 def plaintextFormat(txt):

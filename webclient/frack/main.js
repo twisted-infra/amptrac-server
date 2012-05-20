@@ -12,20 +12,25 @@ define(
     function validate (a) {
       return service.browserIDLogin(a);
     }
+
+    function createLogoutButton(username) {
+      var logoutButton = q(document.createElement("li"));
+      logoutButton.attr("id", "logout-button");
+      logoutButton.attr('innerHTML', '<a href="#">Logout</a>');
+      target.attr('innerHTML', "Logged in as " +
+                       username + " ");
+      logoutButton.insertAfter(target);
+      return logoutButton;
+    }
+
     /**
      * Hook up the logout button and store credentials.
      */
     function onLogin(response) {
-      var logoutButton = q(document.createElement("li"));
-      logoutButton.attr("id", "logout-button");
-      logoutButton.innerHTML('<a href="#">Logout</a>');
-      target.innerHTML("Logged in as " +
-                       response.username + " ");
-      logoutButton.insertAfter(target);
       localStorage.setItem('trac_key', response.key);
       localStorage.setItem('trac_username',
                            response.username);
-      return logoutButton;
+      return createLogoutButton(response.username);
 
     };
     /**
@@ -39,12 +44,26 @@ define(
       return target;
     }
 
+    /**
+     * Send ticket form data to server.
+     */
+    function onSubmitChanges(id, data) {
+      service.updateTicket(localStorage['trac_key'], id, data)
+        .addErrback(ticketPage.renderError)
+        .addCallback(function (_) {window.location.reload();});
+    }
+
     var b = browserid(validate, onLogin, onLogout, ticketPage.renderError);
-    b.start();
+    if (localStorage['trac_key']) {
+      b.onLogin({ok: true, username: localStorage['trac_username'],
+                 key: localStorage['trac_key']});
+    } else {
+      b.start();
+    }
     var queryString = document.location.search.substr(
       document.location.search[0] === "?" ? 1 : 0);
     var urlQueryArgs = ioq.queryToObject(queryString);
     var d = service.fetchTicket(urlQueryArgs.id);
-    d.addCallback(ticketPage.renderTicket);
+    d.addCallback(function (r) {ticketPage.renderTicket(r, onSubmitChanges);});
     d.addErrback(ticketPage.renderError);
   });

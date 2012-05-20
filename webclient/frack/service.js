@@ -16,6 +16,13 @@ define(
         frack.timeout = 300000;
         return frack.callRemote("BrowserIDLogin",
                                 {"assertion": assertion});
+      },
+
+      updateTicket: function (key, ticketid, data) {
+        frack.timeout = 3000;
+        data.id = ticketid;
+        data.key = key;
+        return frack.callRemote("UpdateTicket", data);
       }
     };
   });

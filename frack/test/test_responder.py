@@ -3,7 +3,8 @@ from twisted.trial import unittest
 from twisted.internet.defer import succeed
 from twisted.protocols import amp
 from twisted.web import client
-from frack.responder import FrackResponder, FetchTicket, BrowserIDLogin
+from frack.responder import (FrackResponder, FetchTicket,
+                             BrowserIDLogin, UpdateTicket)
 
 
 FAKETICKET = {'id': 1,
@@ -18,7 +19,8 @@ FAKETICKET = {'id': 1,
               'status': 'open',
               'resolution': '',
               'summary': 'Trac is down',
-              'description': "Let's throw it in the garbage.",
+              'description': "<pre>Let's throw it in the garbage.</pre>",
+              'raw_description': "Let's throw it in the garbage.",
               'keywords': 'trac easy',
               'branch': '',
               'branch_author': '',
@@ -80,3 +82,41 @@ class TestCommands(unittest.TestCase):
                                          None)
         self.assertEqual(response, {'key': 'fake-key', 'email': 'alice@example.com',
                                     'username': 'alice'})
+
+
+    def test_updateTicket(self):
+        """
+        Responder for UpdateTicket sends updates to the store.
+        """
+        updateData = {
+            'type': None,
+            'component': None,
+            'priority': None,
+            'owner': "jethro",
+            'reporter': None,
+            'cc': None,
+            'status': None,
+            'resolution': None,
+            'summary': "awesome ticket",
+            'description': None,
+            'keywords': "review",
+            'branch': None,
+            'branch_author': None,
+            'launchpad_bug': None,
+            'comment': None
+            }
+        updates = []
+        class FakeStore(object):
+            def updateTicket(f, key, ticketid, data):
+                self.assertEqual(key, '123abc')
+                self.assertEqual(ticketid, 123)
+                updates.append(data)
+
+        resp = FrackResponder(FakeStore(), None)
+        box = UpdateTicket.makeArguments(
+            {"id": 123, "key": "123abc", "owner": "jethro",
+             "summary": "awesome ticket", "keywords": "review"}, None)
+        d = resp.locateResponder("UpdateTicket")(box)
+        response = amp._stringsToObjects(d.result, UpdateTicket.response,
+                                         None)
+        self.assertEqual(updates, [updateData])
