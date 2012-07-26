@@ -17,16 +17,12 @@ class FrackService(Service):
         self.ampPort = ampPort
         self.jsonRPCPort = jsonRPCPort
         self.mediaPath = mediaPath
-        self.amp = None
-        self.jsonrpc = None
-
-
-    def startService(self):
         self.amp = AMPService(self.ampPort, self.responder)
-        self.amp.startService()
-
         self.jsonrpc = JSONRPCService(self.jsonRPCPort, self.responder,
                                       self.mediaPath)
+
+    def startService(self):
+        self.amp.startService()
         self.jsonrpc.startService()
 
 

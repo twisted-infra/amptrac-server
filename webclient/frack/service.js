@@ -3,8 +3,8 @@ define(
   /**
    * JSON-RPC request methods.
    */
-  function (makeService) {
-    var frack = makeService({"serviceUrl": "/amp"});
+  function (makeService, baseUrl) {
+    var frack = makeService({"serviceUrl": "../amp"});
     return {
       fetchTicket: function (id) {
         frack.timeout = 3000;

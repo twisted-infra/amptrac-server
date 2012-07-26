@@ -78,14 +78,13 @@ class JSONRPCService(Service):
         self.port = port
         self.responder = responder
         self.mediaPath = mediaPath
-
-
-    def startService(self):
-        self.endpoint = serverFromString(reactor, self.port)
         self.root = Resource()
         self.root.putChild('amp', JSONRPCFace(self.responder))
         self.root.putChild('ui', static.File(self.mediaPath))
         self.site = Site(self.root)
+
+    def startService(self):
+        self.endpoint = serverFromString(reactor, self.port)
         self.endpoint.listen(self.site)
 
 
