@@ -7,7 +7,7 @@ define(
     var frack = makeService({"serviceUrl": "../amp"});
     return {
       fetchTicket: function (id) {
-        frack.timeout = 3000;
+        frack.timeout = 30000;
         return frack.callRemote("FetchTicket",
                                 {"id": Number(id),
                                  "asHTML": true});
@@ -19,7 +19,7 @@ define(
       },
 
       updateTicket: function (key, ticketid, data) {
-        frack.timeout = 3000;
+        frack.timeout = 30000;
         data.id = ticketid;
         data.key = key;
         return frack.callRemote("UpdateTicket", data);

@@ -1,6 +1,6 @@
 # Copyright (c) Twisted Matrix Laboratories.
 # See LICENSE for details.
-import time
+import time, hashlib
 from twisted.internet import defer
 
 class UnauthorizedError(Exception):
