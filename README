@@ -17,4 +17,15 @@ define an HTTP-friendly interface.
 *** Client
 The web client lives in `webclient` and uses Dojo and Mustache. HTML
 templating is done client side and communication with the server is
-via JSON-RPC. BrowserID is used for authentication.
+via JSON-RPC. Persona (http://persona.org) is used for authentication.
+
+
+** How To Run It
+If you want to develop Frack, the tests can be run via 'trial frack.test'. For running a development server:
+
+# load some test data into an sqlite db
+sqlite3 < frack/test/trac_test.sql trac.db
+
+# start the server (the URL here must be the url at which you will
+# access the site)
+twistd -n frack --sqlite_db=trac.db -b http://localhost:1353/
