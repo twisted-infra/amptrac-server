@@ -92,18 +92,31 @@ class DBStore(object):
         Find a username by looking up the associated email address.
         """
         c = self.connection.cursor()
-        c.execute(self.q("SELECT sid from session_attribute where name = 'email' and authenticated = 1 and value = ?"), (email,))
+        c.execute(self.q("SELECT sid from session_attribute "
+                         "where name = 'email' and authenticated = 1 "
+                                               "and value = ?"), (email,))
         result = c.fetchall()
         if not result:
             username = email
+            c.execute(self.q("DELETE FROM session where sid = ?"), (email,))
+            c.execute(
+                self.q("INSERT INTO session (sid, authenticated, last_visit) "
+                       "VALUES (?, ?, ?)"), (email, 1, time.time()))
+            c.execute(self.q("INSERT INTO session_attribute "
+                             "(sid, authenticated, name, value) "
+                             "VALUES (?, ?,'email', ?)"),
+                      (email, 1, email))
+            self.connection.commit()
         else:
             username = result[0][0]
-        c.execute(self.q("SELECT cookie from auth_cookie where name = ?"), (username,))
+        c.execute(self.q("SELECT cookie from auth_cookie where name = ?"),
+                  (username,))
         result = c.fetchall()
         if not result:
             key = hashlib.sha1(os.urandom(16)).hexdigest()
             c.execute(self.q("INSERT INTO auth_cookie VALUES (?, ?, '', ?)"),
                       (key, username, int(time.time())))
+            self.connection.commit()
         else:
             key = result[0][0]
         return defer.succeed((key, username))
@@ -111,7 +124,8 @@ class DBStore(object):
 
     def _auth(self, key):
         c = self.connection.cursor()
-        c.execute(self.q("SELECT name from auth_cookie where cookie = ?"), (key,))
+        c.execute(self.q("SELECT name from auth_cookie where cookie = ?"),
+                  (key,))
         data = c.fetchall()
         if not data:
             return None

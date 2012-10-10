@@ -49,6 +49,30 @@ class DBTests(TestCase):
                                       'alice'))
         return d.addCallback(_check)
 
+    def test_createAccountFromEmail(self):
+        """
+        `lookupByEmail` looks up a session key and username by the
+        email associated with it.
+        """
+        store = DBStore((sqlite3, self.db))
+        email = 'bob@example.org'
+        d = store.lookupByEmail(email);
+        def _check(result):
+            key, name = result
+            self.assertEqual(name, email)
+            c = self.db.execute("select sid, authenticated, value "
+                            "from session_attribute "
+                            "where name = 'email' ""and value = ?",
+                            (email,))
+            self.assertEqual(c.fetchall(), [(email, 1, email)])
+            c = self.db.execute("select authenticated from session "
+                            "where sid = ?", (email,))
+            self.assertEqual(c.fetchall(), [(1,)])
+            c = self.db.execute("select cookie from auth_cookie where name = ?",
+                            (email,))
+            self.assertEqual(c.fetchall(), [(key,)])
+        return d.addCallback(_check)
+
 
 
     def test_unauthorizedUpdate(self):

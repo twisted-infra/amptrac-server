@@ -64,7 +64,7 @@ class TestCommands(unittest.TestCase):
         """
 
         def fakeGetPage(url, method):
-            self.assertEqual(url, "https://browserid.org/verify"
+            self.assertEqual(url, "https://verifier.login.persona.org/verify"
                              "?audience=https://example.org/&"
                              "assertion=fake-assertion")
             return succeed(json.dumps({'status': 'okay',
