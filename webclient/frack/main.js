@@ -26,11 +26,11 @@ define(
     /**
      * Hook up the logout button and store credentials.
      */
-    function onLogin(response) {
-      localStorage.setItem('trac_key', response.key);
+    function onLogin(key, username) {
+      localStorage.setItem('trac_key', key);
       localStorage.setItem('trac_username',
-                           response.username);
-      return createLogoutButton(response.username);
+                           username);
+      return createLogoutButton(username);
 
     };
     /**
@@ -54,12 +54,13 @@ define(
     }
 
     var b = browserid(validate, onLogin, onLogout, ticketPage.renderError);
-    if (localStorage['trac_key']) {
-      b.onLogin({ok: true, username: localStorage['trac_username'],
-                 key: localStorage['trac_key']});
-    } else {
-      b.start();
-    }
+    b.start(localStorage.trac_key,
+            localStorage.trac_username,
+           function () {
+               target.innerHTML("<a href='#'>Login / Register</a>");
+               return target;
+           });
+
     var queryString = document.location.search.substr(
       document.location.search[0] === "?" ? 1 : 0);
     var urlQueryArgs = ioq.queryToObject(queryString);
