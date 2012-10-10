@@ -157,7 +157,8 @@ class FrackResponder(amp.CommandLocator):
         """
         @see: L{BrowserIDLogin}
         """
-        d = client.getPage("https://browserid.org/verify?audience=%s&assertion=%s"
+        # TODO: Verify SSL cert for this host.
+        d = client.getPage("https://verifier.login.persona.org/verify?audience=%s&assertion=%s"
                            % ( self.baseUrl, qp(assertion)), method="POST")
         def _collect(resultData):
             result = json.loads(resultData)
