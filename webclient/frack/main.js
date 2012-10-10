@@ -49,8 +49,8 @@ define(
      */
     function onSubmitChanges(id, data) {
       service.updateTicket(localStorage['trac_key'], id, data)
-        .addErrback(ticketPage.renderError)
-        .addCallback(function (_) {window.location.reload();});
+        .then(function (_) {window.location.reload();},
+              ticketPage.renderError);
     }
 
     var b = browserid(validate, onLogin, onLogout, ticketPage.renderError);
@@ -65,6 +65,6 @@ define(
       document.location.search[0] === "?" ? 1 : 0);
     var urlQueryArgs = ioq.queryToObject(queryString);
     var d = service.fetchTicket(urlQueryArgs.id);
-    d.addCallback(function (r) {ticketPage.renderTicket(r, onSubmitChanges);});
-    d.addErrback(ticketPage.renderError);
+    d.then(function (r) {ticketPage.renderTicket(r, onSubmitChanges);},
+           ticketPage.renderError);
   });

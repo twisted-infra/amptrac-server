@@ -25,8 +25,8 @@ define(
             var self = this;
           if (assertion !== null) {
             var r = validateAssertion(assertion);
-            r.addCallback(lang.hitch(this, "onLogin"));
-            r.addErrback(reportError);
+            r.then(lang.hitch(this, "onLogin"),
+                   reportError);
             return r;
           } else {
             return null;
