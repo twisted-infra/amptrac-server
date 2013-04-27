@@ -111,6 +111,8 @@ class AmptracResponder(amp.CommandLocator):
                     self._rewriteTicket(ticket, safeTracWikiFormat)
                 else:
                     self._rewriteTicket(ticket, plaintextFormat)
+            else:
+                self._rewriteTicket(ticket, lambda x: x)
             return ticket
         d.addCallback(_cleanup)
 
