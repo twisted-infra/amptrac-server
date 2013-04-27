@@ -109,4 +109,4 @@ class DBTests(TestCase):
                          where ticket = 4712 and name = 'branch_author'""")
             self.assertEqual(c.fetchall(), [('bob',)])
         return d.addCallback(_checkDB)
-    test_updateTicket.todo = "This needs authentication, first."
+    test_updateTicket.skip = "This needs authentication, first."
