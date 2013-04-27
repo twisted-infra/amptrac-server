@@ -1,7 +1,8 @@
 from twisted.trial import unittest
 from twisted.internet.defer import succeed
 from twisted.protocols import amp
-from amptrac.responder import (AmptracResponder, FetchTicket, UpdateTicket)
+from amptrac.responder import (
+        AmptracResponder, FetchTicket, UpdateTicket, FetchReviewTickets)
 
 
 FAKETICKET = {'id': 1,
@@ -29,6 +30,25 @@ FAKETICKET = {'id': 1,
                            'oldvalue': '1',
                            'newvalue': 'OK'}]}
 
+FAKEREVIEWTICKET = {'id': 1,
+                   'type': 'enhancement',
+                   'time': 12345,
+                   'changetime': 12346,
+                   'component': 'web',
+                   'priority': 'high',
+                   'owner': 'washort',
+                   'reporter': 'exarkun',
+                   'cc': '',
+                   'status': 'open',
+                   'resolution': '',
+                   'summary': 'Trac is down',
+                   'description': "<pre>Let's throw it in the garbage.</pre>",
+                   'raw_description': "Let's throw it in the garbage.",
+                   'keywords': 'trac easy',
+                   'branch': '',
+                   'branch_author': '',
+                   'launchpad_bug': '98765'}
+
 
 class TestCommands(unittest.TestCase):
     """
@@ -52,6 +72,23 @@ class TestCommands(unittest.TestCase):
                                          None)
         self.assertEqual(response, FAKETICKET)
 
+
+    def test_fetchReviewTickets(self):
+        """
+        The AMP responder for FetchReviewTickets invokes the store's
+        `fetchReviewTickets` method and passes the results to the client.
+        """
+        class FakeStore(object):
+            def fetchReviewTickets(f):
+                return succeed([FAKEREVIEWTICKET])
+        resp = AmptracResponder(FakeStore())
+        box = FetchReviewTickets.makeArguments({"asHTML": False}, None)
+        d = resp.locateResponder("FetchReviewTickets")(box)
+        from twisted.python import log
+        d.addErrback(log.err)
+        response = amp._stringsToObjects(d.result, FetchReviewTickets.response,
+                                         None)
+        self.assertEqual(response, {'tickets': [FAKEREVIEWTICKET]})
 
     def test_updateTicket(self):
         """

@@ -163,8 +163,8 @@ class Server(object):
 
 }}}
 ','');
-INSERT INTO "ticket" VALUES(5622,'enhancement',1333844383,1334260992,'core',NULL,'normal','','exarkun','',NULL,'','closed','duplicate','Refactor TCPClientTestsBuilder and TCP6ClientTestsBuilder to make their endpoint factories re-usable for other test cases','These two `ReactorBuilder` subclasses also define useful functionality for other test cases, but since they inherit test methods from another `TestCase` mixin, that functionality can''t be re-used without also inheriting those test methods (which at best will cause tests to be run repeatedly, at worst will add unwanted failing tests to another case).
-','tests');
+INSERT INTO "ticket" VALUES(5622,'enhancement',1333844383,1334260992,'core',NULL,'normal','','exarkun','',NULL,'','new',NULL,'Refactor TCPClientTestsBuilder and TCP6ClientTestsBuilder to make their endpoint factories re-usable for other test cases','These two `ReactorBuilder` subclasses also define useful functionality for other test cases, but since they inherit test methods from another `TestCase` mixin, that functionality can''t be re-used without also inheriting those test methods (which at best will cause tests to be run repeatedly, at worst will add unwanted failing tests to another case).
+','tests review');
 INSERT INTO "ticket" VALUES(2723,'enhancement',1182804821,1334367409,'core',NULL,'lowest','glyph','glyph','thijs, jesstess, khorn',NULL,'','new',NULL,'Twisted.Quotes does not serve its original intended purpose','= Problem =
 
 The idea for a Twisted quotefile started with a tradition at Origin, where each released game included a quotefile from the game''s development team.  This allowed the users to get a feel for the developers'' culture, and the developers to feel a bit more connected to the users by sharing it.

@@ -37,6 +37,26 @@ class DBTests(TestCase):
         return d.addCallback(_check)
 
 
+    def test_fetchReviewTickets(self):
+        """
+        `fetchReviewTicket` returns all tickets currently in review.
+        """
+        store = DBStore((sqlite3, self.db))
+        d = store.fetchReviewTickets()
+        def _check(results):
+            for result in results:
+                self.assertEqual(set(result.keys()),
+                                 {"type", "status", "summary", "time", "reporter",
+                                  "owner", "priority",  "resolution", "component",
+                                  "keywords", "cc", "branch", "branch_author",
+                                  "launchpad_bug", "description",
+                                  "id", "changetime"})
+            self.assertEqual(set([row['id'] for row in results]),
+                    set([5622]))
+
+        return d.addCallback(_check)
+
+
 
     def test_unauthorizedUpdate(self):
         """

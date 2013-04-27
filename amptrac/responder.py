@@ -57,6 +57,38 @@ class FetchTicket(amp.Command):
 
 
 
+class FetchReviewTickets(amp.Command):
+    """
+    Requests list of review tickets from data store.
+
+    @param asHTML: Whether to render comments/description as HTML or
+    not. Will use Trac wiki formatting if available.
+
+    Returns all ticket fields.
+    """
+    arguments = [('asHTML', amp.Boolean(optional=True))]
+    response = [('tickets', amp.AmpList([('id', amp.Integer()),
+                                         ('type', amp.Unicode()),
+                                         ('time', amp.Integer()),
+                                         ('changetime', amp.Integer()),
+                                         ('component', amp.Unicode()),
+                                         ('priority', amp.Unicode()),
+                                         ('owner', amp.Unicode()),
+                                         ('reporter', amp.Unicode()),
+                                         ('cc', amp.Unicode()),
+                                         ('status', amp.Unicode()),
+                                         ('resolution', amp.Unicode()),
+                                         ('summary', amp.Unicode()),
+                                         ('description', amp.Unicode()),
+                                         ('raw_description', amp.Unicode()),
+                                         ('keywords', amp.Unicode()),
+                                         ('branch', amp.Unicode()),
+                                         ('branch_author', amp.Unicode()),
+                                         ('launchpad_bug', amp.Unicode())]))]
+
+
+
+
 class UpdateTicket(amp.Command):
     """
     Updates a ticket in the data store with new values for fields.
@@ -94,7 +126,7 @@ class AmptracResponder(amp.CommandLocator):
     def _rewriteTicket(self, ticket, transform):
         ticket['raw_description'] = ticket['description']
         ticket['description'] = transform(ticket['description'])
-        for change in ticket['changes']:
+        for change in ticket.get('changes', []):
             if change['field'] == 'comment':
                 change['newvalue'] = transform(change['newvalue'])
 
@@ -114,6 +146,32 @@ class AmptracResponder(amp.CommandLocator):
             else:
                 self._rewriteTicket(ticket, lambda x: x)
             return ticket
+        d.addCallback(_cleanup)
+
+        def _handleErr(e):
+            log.err(e)
+            return e
+        d.addErrback(_handleErr)
+        return d
+
+
+    @FetchReviewTickets.responder
+    def fetchReviewTickets(self, asHTML):
+        """
+        @see: L{FetchReviewTickets}
+        """
+        d = self.store.fetchReviewTickets()
+        def _cleanup(tickets):
+            if asHTML:
+                if trac:
+                    formatter = safeTracWikiFormat
+                else:
+                    formatter = plaintextFormat
+            else:
+                formatter = lambda x: x
+            for ticket in tickets:
+                self._rewriteTicket(ticket, formatter)
+            return {'tickets': tickets}
         d.addCallback(_cleanup)
 
         def _handleErr(e):

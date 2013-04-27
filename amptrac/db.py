@@ -87,6 +87,33 @@ class DBStore(object):
         return defer.succeed(ticket)
 
 
+    def fetchReviewTickets(self):
+        """
+        Return a list of all review tickets.
+        """
+        c = self.connection.cursor()
+        c.execute(self.q(
+                "SELECT id, type, time, changetime, component, priority, owner,"
+                " reporter, cc, status, resolution, summary, description, "
+                "keywords FROM ticket WHERE (keywords LIKE  '%%review%%') and (status <> 'closed')"))
+        ticketRows = c.fetchall()
+        ticketFields = ["id", "type", "time", "changetime", "component", "priority", "owner",
+                        "reporter", "cc", "status", "resolution", "summary",
+                        "description", "keywords"]
+        tickets = []
+        for ticketRow in ticketRows:
+            ticket = dict([(k, v or '') for k, v in zip(ticketFields, ticketRow)])
+
+            c.execute(self.q("SELECT name, value from ticket_custom where name "
+                "in ('branch', 'branch_author', 'launchpad_bug') "
+                "and ticket = ?"),
+                [ticket['id']])
+            ticket.update(c.fetchall())
+            tickets.append(ticket)
+        return defer.succeed(tickets)
+
+
+
     def updateTicket(self, key, id, data):
         """
         Change a ticket's fields and add to its change log.
