@@ -40,11 +40,11 @@ def wrapParagraphs(content, width, indentLevel):
 
 
 
-def format(response):
+def formatTicket(response):
     height, width = termsize()
     response['time'] = convertTime(response['time'])
-    headline = "* #%(id)s - %(owner)s - %(summary)s [%(status)s] - " % response
-    subline = ("`-- keywords: %(keywords)s reporter: %(reporter)s "
+    headline = "* #%(id)s - %(owner)s - %(summary)s [%(status)s]\n" % response
+    subline = ("`-- keywords: %(keywords)s reporter: %(reporter)s\n"
                "component: %(component)s" % response)
     indent = " " * 4
     body = textwrap.wrap(response['description'], width=width - 8,
@@ -58,7 +58,6 @@ def format(response):
             changes.append('    ** %(author)s - %(time)s #%(oldvalue)s' % item)
             comment = wrapParagraphs(item['newvalue'], width, 8)
             changes.extend(comment)
-            changes.append('\n')
         else:
             changes.append('# %(author)s changed %(field)s: '
                            '%(oldvalue)s -> %(newvalue)s' % item)
@@ -72,7 +71,7 @@ def main(reactor, *argv):
     config.parseOptions(argv[1:])
     def fetch(p):
         d = p.callRemote(FetchTicket, id=config['id'], asHTML=False)
-        d.addCallback(format)
+        d.addCallback(formatTicket)
         return d
     
     d = connectProtocol(clientFromString(reactor, config['port']), amp.AMP())
