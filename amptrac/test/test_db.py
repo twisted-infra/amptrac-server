@@ -33,8 +33,38 @@ class DBTests(TestCase):
             self.assertEqual(len(result['changes']), 45)
             self.assertEqual(set(result['changes'][0].keys()),
                              {"newvalue", "author", "oldvalue", "time", "field"})
+            
+            self.assertEqual(len(result['attachments']), 0)
 
         return d.addCallback(_check)
+
+
+    def test_fetchTicket_attachments(self):
+        """
+        `fetchTicket` collects data about a single ticket, including
+        comments/changes, attachments, and custom fields.
+        """
+
+        store = DBStore((sqlite3, self.db))
+        d = store.fetchTicket(5517)
+        def _check(result):
+            self.assertEqual(set(result.keys()),
+                             {"type", "status", "summary", "time", "reporter",
+                              "owner", "priority",  "resolution", "component",
+                              "keywords", "cc", "branch", "branch_author",
+                              "launchpad_bug", "description", "changes",
+                              "attachments", "id", "changetime"})
+
+            self.assertEqual(len(result['changes']), 17)
+            self.assertEqual(set(result['changes'][0].keys()),
+                             {"newvalue", "author", "oldvalue", "time", "field"})
+            
+            self.assertEqual(len(result['attachments']), 1)
+            self.assertEqual(set(result['attachments'][0].keys()),
+                             {"id", "filename", "size", "time", "description", "author"})
+
+        return d.addCallback(_check)
+
 
 
     def test_fetchReviewTickets(self):

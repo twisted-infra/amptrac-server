@@ -65,14 +65,23 @@ class DBStore(object):
                 " reporter, cc, status, resolution, summary, description, "
                 "keywords FROM ticket WHERE id = ?"), [ticketNumber])
         ticketRow = c.fetchone()
+        ticketFields = ["id", "type", "time", "changetime", "component", "priority", "owner",
+                        "reporter", "cc", "status", "resolution", "summary",
+                        "description", "keywords"]
+
         c.execute(self.q("SELECT time, author, field, oldvalue, newvalue "
                          "FROM ticket_change WHERE ticket = ? ORDER BY time"),
                   [ticketNumber])
         changeFields = ['time', 'author', 'field', 'oldvalue', 'newvalue']
-        ticketFields = ["id", "type", "time", "changetime", "component", "priority", "owner",
-                        "reporter", "cc", "status", "resolution", "summary",
-                        "description", "keywords"]
-        changesRow = c.fetchall()
+        changesRows = c.fetchall()
+
+        c.execute(self.q(
+                "SELECT id, filename, size, time, description, author "
+                "FROM attachment WHERE id = ? and type = 'ticket' ORDER BY time"),
+                [str(ticketNumber)])
+        attachmentRows = c.fetchall()
+        attachmentFields = ['id', 'filename', 'size', 'time', 'description', 'author']
+        
         ticket = dict([(k, v or '') for k, v in zip(ticketFields, ticketRow)])
 
         c.execute(self.q("SELECT name, value from ticket_custom where name "
@@ -81,9 +90,13 @@ class DBStore(object):
                   [ticketNumber])
         ticket.update(c.fetchall())
         ticket['attachments'] = []
+        for attachment in attachmentRows:
+            ticket['attachments'].append(dict([(k, v or '') for k, v in zip(attachmentFields, attachment)]))
+
         ticket['changes'] = []
-        for change in changesRow:
+        for change in changesRows:
             ticket['changes'].append(dict([(k, v or '') for k, v in zip(changeFields, change)]))
+
         return defer.succeed(ticket)
 
 
