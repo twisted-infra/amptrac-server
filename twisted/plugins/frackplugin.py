@@ -3,7 +3,7 @@
 from twisted.application.service import ServiceMaker
 
 Frack = ServiceMaker(
-    "Frack",
-    "frack.service",
+    "Amptrac",
+    "amptrac.service",
     ("A parasite upon issue trackers."),
-    "frack")
+    "amptrac")

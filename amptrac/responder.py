@@ -2,21 +2,11 @@
 # See LICENSE for details.
 
 """
-Definitions of AMP commands for Frack and responders for them.
+Definitions of AMP commands for Amptrac and responders for them.
 """
 
-import types
-from urllib import quote_plus as qp
-try:
-    import json
-except ImportError:
-    import simplejson as json
 import cgi
 from twisted.protocols import amp
-from twisted.web import client
-from twisted.web.server import NOT_DONE_YET
-from twisted.web.resource import Resource
-from twisted.internet.defer import maybeDeferred
 from twisted.python import log
 try:
     import trac
@@ -66,22 +56,6 @@ class FetchTicket(amp.Command):
                                          ('newvalue', amp.Unicode())]))]
 
 
-class BrowserIDLogin(amp.Command):
-    """
-    Verifies a BrowserID assertion and looks up a user account. If not
-    found, a new one for the given email address is created.
-
-    @param assertion: Assertion blob from BrowserID service.
-
-    Returns the user's email and username, and a key to be used in
-    further commands.
-    """
-    arguments = [('assertion', amp.Unicode())]
-    response = [('email', amp.Unicode()),
-                ('username', amp.Unicode()),
-                ('key', amp.Unicode())]
-
-
 
 class UpdateTicket(amp.Command):
     """
@@ -107,19 +81,14 @@ class UpdateTicket(amp.Command):
 
 
 
-class FrackResponder(amp.CommandLocator):
+class AmptracResponder(amp.CommandLocator):
     """
-    Home to responders for Frack's AMP/JSON-RPC commands.
+    Home to responders for Amptrac's AMP/JSON-RPC commands.
 
     @param store: A data store object, probably a wrapper for a Trac DB.
-
-    @param baseUrl: The URL the web client is available at. (Used by
-    BrowserID's "audience" parameter to indicate the site login is
-    being done for.)
     """
-    def __init__(self, store, baseUrl):
+    def __init__(self, store):
         self.store = store
-        self.baseUrl = baseUrl
 
 
     def _rewriteTicket(self, ticket, transform):
@@ -152,31 +121,10 @@ class FrackResponder(amp.CommandLocator):
         return d
 
 
-    @BrowserIDLogin.responder
-    def browserIDLogin(self, assertion):
-        """
-        @see: L{BrowserIDLogin}
-        """
-        # TODO: Verify SSL cert for this host.
-        d = client.getPage("https://verifier.login.persona.org/verify?audience=%s&assertion=%s"
-                           % ( self.baseUrl, qp(assertion)), method="POST")
-        def _collect(resultData):
-            result = json.loads(resultData)
-            if result['status'] != 'okay':
-                return {'ok': False, 'email': ''}
-            return (self.store.lookupByEmail(result['email'])
-                    .addCallback(_gotUser, {'ok': True, 'email': result['email']}))
-        def _gotUser((key, username), result):
-            result['username'] = username
-            result['key'] = key
-            return result
-        return d.addCallback(_collect)
-
-
-    @UpdateTicket.responder
-    def updateTicket(self, key, id, **kwargs):
-        self.store.updateTicket(key, id, kwargs)
-        return {}
+    # @UpdateTicket.responder
+    # def updateTicket(self, key, id, **kwargs):
+    #    self.store.updateTicket(key, id, kwargs)
+    #    return {}
 
 
 def plaintextFormat(txt):

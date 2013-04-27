@@ -1,7 +1,7 @@
 import sqlite3
 from twisted.trial.unittest import TestCase
 from twisted.python.util import sibpath
-from frack.db import DBStore, UnauthorizedError
+from amptrac.db import DBStore, UnauthorizedError
 
 
 
@@ -34,43 +34,6 @@ class DBTests(TestCase):
             self.assertEqual(set(result['changes'][0].keys()),
                              {"newvalue", "author", "oldvalue", "time", "field"})
 
-        return d.addCallback(_check)
-
-
-    def test_lookupByEmail(self):
-        """
-        `lookupByEmail` looks up a session key and username by the
-        email associated with it.
-        """
-        store = DBStore((sqlite3, self.db))
-        d = store.lookupByEmail('alice@example.com')
-        def _check(result):
-            self.assertEqual(result, ('a331422278bd676f3809e7a9d8600647',
-                                      'alice'))
-        return d.addCallback(_check)
-
-    def test_createAccountFromEmail(self):
-        """
-        `lookupByEmail` looks up a session key and username by the
-        email associated with it.
-        """
-        store = DBStore((sqlite3, self.db))
-        email = 'bob@example.org'
-        d = store.lookupByEmail(email);
-        def _check(result):
-            key, name = result
-            self.assertEqual(name, email)
-            c = self.db.execute("select sid, authenticated, value "
-                            "from session_attribute "
-                            "where name = 'email' ""and value = ?",
-                            (email,))
-            self.assertEqual(c.fetchall(), [(email, 1, email)])
-            c = self.db.execute("select authenticated from session "
-                            "where sid = ?", (email,))
-            self.assertEqual(c.fetchall(), [(1,)])
-            c = self.db.execute("select cookie from auth_cookie where name = ?",
-                            (email,))
-            self.assertEqual(c.fetchall(), [(key,)])
         return d.addCallback(_check)
 
 
@@ -146,3 +109,4 @@ class DBTests(TestCase):
                          where ticket = 4712 and name = 'branch_author'""")
             self.assertEqual(c.fetchall(), [('bob',)])
         return d.addCallback(_checkDB)
+    test_updateTicket.todo = "This needs authentication, first."

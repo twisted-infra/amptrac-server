@@ -1,12 +1,12 @@
 # Copyright (c) Twisted Matrix Laboratories.
 # See LICENSE for details.
-import pprint, sys, textwrap, time, datetime
+import sys, textwrap, time, datetime
 from twisted.internet import reactor
 from twisted.internet.protocol import ClientFactory
 from twisted.internet.endpoints import clientFromString
 from twisted.protocols import amp
 from twisted.python import usage, log
-from frack.responder import FetchTicket
+from amptrac.responder import FetchTicket
 
 def termsize():
     import fcntl, termios, struct
@@ -16,7 +16,7 @@ def termsize():
 
 
 class Options(usage.Options):
-    synopsis = "frack.ampclient [options] <ticket id>"
+    synopsis = "amptrac.ampclient [options] <ticket id>"
 
     optParameters = [['port', 'p', 'tcp:host=localhost:port=1352',
                       'Service description for the AMP connector.']]
@@ -47,7 +47,6 @@ def convertTime(unixtime):
 def wrapParagraphs(content, width, indentLevel):
     indent = " " * indentLevel
     paras = content.split('\r\n\r\n')
-    out = []
     for para in paras:
         yield textwrap.fill(
                     para, width=width - 8,
