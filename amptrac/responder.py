@@ -84,8 +84,6 @@ class FetchReviewTickets(amp.Command):
                                          ('status', amp.Unicode()),
                                          ('resolution', amp.Unicode()),
                                          ('summary', amp.Unicode()),
-                                         ('description', amp.Unicode()),
-                                         ('raw_description', amp.Unicode()),
                                          ('keywords', amp.Unicode()),
                                          ('branch', amp.Unicode()),
                                          ('branch_author', amp.Unicode()),
@@ -167,15 +165,6 @@ class AmptracResponder(amp.CommandLocator):
         """
         d = self.store.fetchReviewTickets()
         def _cleanup(tickets):
-            if asHTML:
-                if trac:
-                    formatter = safeTracWikiFormat
-                else:
-                    formatter = plaintextFormat
-            else:
-                formatter = lambda x: x
-            for ticket in tickets:
-                self._rewriteTicket(ticket, formatter)
             return {'tickets': tickets}
         d.addCallback(_cleanup)
 

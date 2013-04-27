@@ -79,8 +79,7 @@ class DBTests(TestCase):
                                  {"type", "status", "summary", "time", "reporter",
                                   "owner", "priority",  "resolution", "component",
                                   "keywords", "cc", "branch", "branch_author",
-                                  "launchpad_bug", "description",
-                                  "id", "changetime"})
+                                  "launchpad_bug", "id", "changetime"})
             self.assertEqual(set([row['id'] for row in results]),
                     set([5622]))
 

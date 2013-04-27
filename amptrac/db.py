@@ -107,12 +107,12 @@ class DBStore(object):
         c = self.connection.cursor()
         c.execute(self.q(
                 "SELECT id, type, time, changetime, component, priority, owner,"
-                " reporter, cc, status, resolution, summary, description, "
+                " reporter, cc, status, resolution, summary, "
                 "keywords FROM ticket WHERE (keywords LIKE  '%%review%%') and (status <> 'closed')"))
         ticketRows = c.fetchall()
         ticketFields = ["id", "type", "time", "changetime", "component", "priority", "owner",
                         "reporter", "cc", "status", "resolution", "summary",
-                        "description", "keywords"]
+                        "keywords"]
         tickets = []
         for ticketRow in ticketRows:
             ticket = dict([(k, v or '') for k, v in zip(ticketFields, ticketRow)])
