@@ -1,10 +1,16 @@
 # Copyright (c) Twisted Matrix Laboratories.
 # See LICENSE for details.
 
-import sys, textwrap, time, datetime
-from twisted.internet.endpoints import clientFromString, connectProtocol
+import sys, time, datetime, os
+from twisted.internet.endpoints import (
+        clientFromString, connectProtocol, ProcessEndpoint)
+from twisted.internet.error import ConnectionDone
+from twisted.internet.defer import Deferred
+from twisted.internet.utils import getProcessOutput
 from twisted.protocols import amp
 from twisted.python import usage
+from twisted.internet.defer import inlineCallbacks
+from twisted.test.proto_helpers import AccumulatingProtocol
 from amptrac.responder import FetchTicket
 import treq
 
@@ -19,6 +25,13 @@ class GetOptions(usage.Options):
         self['id'] = int(id)
         self['filename'] = filename
 
+class ApplyOptions(usage.Options):
+
+    optParameters = [['patch-level', 'p', '0', 'Patch level.']]
+
+    def parseArgs(self, id, filename=None):
+        self['id'] = int(id)
+
 
 class Options(usage.Options):
     synopsis = "fetch-tickets [options] <ticket id>"
@@ -26,7 +39,8 @@ class Options(usage.Options):
     optParameters = [['port', 'p', 'tcp:host=localhost:port=1352',
                       'Service description for the AMP connector.']]
     subCommands = [['list', '', ListOptions, 'List attachemts.'],
-                   ['get', '', GetOptions, 'Get attachemt.']]
+                   ['get', '', GetOptions, 'Get attachemt.'],
+                   ['apply', '', ApplyOptions, 'Apply patch.']]
     defaultSubCommand = 'list'
 
     def postOptions(self):
@@ -35,17 +49,6 @@ class Options(usage.Options):
 
 def convertTime(unixtime):
     return datetime.datetime(*time.gmtime(unixtime)[:6])
-
-
-
-def wrapParagraphs(content, width, indentLevel):
-    indent = " " * indentLevel
-    paras = content.split('\r\n\r\n')
-    for para in paras:
-        yield textwrap.fill(
-                    para, width=width - 8,
-                    replace_whitespace=False, initial_indent=indent,
-                    subsequent_indent=indent) + '\n'
 
 
 
@@ -69,7 +72,6 @@ def getAttachment(id, filename):
     url = 'https://twistedmatrix.com/trac/raw-attachment/ticket/%s/%s' % (id, filename)
     d = treq.get(url.encode('utf-8'))
     d.addCallback(treq.content)
-    d.addCallback(sys.__stdout__.write)
     return d
 
 def getLastAttachment(response):
@@ -80,6 +82,26 @@ def connect(config, reactor):
 
 def fetchTicket(proto, config):
     return proto.callRemote(FetchTicket, id=config['id'], asHTML=False)
+
+@inlineCallbacks
+def applyPatch(patch, reactor, config, ticket):
+    proto = AccumulatingProtocol()
+    done = Deferred()
+    proto.closedDeferred = done
+    proto = yield connectProtocol(
+            ProcessEndpoint(reactor, "git", ("git", "apply", "--index",
+                                             "-p", config.subOptions['patch-level'])),
+            proto)
+    proto.transport.write(patch)
+    proto.transport.closeStdin()
+    yield done
+    proto.closedReason.trap(ConnectionDone)
+
+    print (yield getProcessOutput("git", ("commit",
+        '--no-edit',
+        '-m', 'Apply %(filename)s from %(author)s.' % ticket['attachments'][-1],
+        '-m', 'Refs: #%(id)d' % ticket),
+        env = os.environ))
 
 
 def main(reactor, *argv):
@@ -92,8 +114,17 @@ def main(reactor, *argv):
                 .addCallback(listAttachments))
     elif config.subCommand == 'get':
         if config.subOptions['filename']:
-            return getAttachment(config['id'], config.subOptions['filename'])
+            return (getAttachment(config['id'], config.subOptions['filename'])
+                    .addCallback(sys.__stdout__.write))
         else:
             return (connect(config, reactor)
                     .addCallback(fetchTicket, config)
-                    .addCallback(getLastAttachment))
+                    .addCallback(getLastAttachment)
+                    .addCallback(sys.__stdout__.write))
+    elif config.subCommand == 'apply':
+        def apply(ticket):
+            return (getLastAttachment(ticket)
+                    .addCallback(applyPatch, reactor, config, ticket))
+        return (connect(config, reactor)
+                .addCallback(fetchTicket, config)
+                .addCallback(apply))
