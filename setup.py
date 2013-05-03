@@ -23,10 +23,13 @@ setup(
     author='Tom Prince',
     author_email='tom.prince@ualberta.net',
     packages=['amptrac', 'amptrac.scripts', 'amptrac.test'],
-    scripts=['bin/fetch-ticket', 'bin/review-tickets'],
+    scripts=['bin/fetch-ticket', 'bin/review-tickets', 'bin/get-attachment'],
     install_requires=[
-        'twisted >= 13.1.0',
-        'pg8000',
+        'twisted >= 13.0.0',
+        'treq',
     ],
+    extras_require={
+        'server': ['twisted >= 13.0.0', 'pg8000'],
+    },
     zip_safe=False,
 )
