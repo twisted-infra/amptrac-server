@@ -2,15 +2,13 @@
 # See LICENSE for details.
 
 import sys, textwrap, time, datetime
-from twisted.internet.endpoints import clientFromString, connectProtocol
-from twisted.protocols import amp
 from twisted.python import usage
-from amptrac.responder import FetchTicket
+from amptrac.client import connect, DEFAULT_AMP_ENDPOINT
 
 class Options(usage.Options):
     synopsis = "fetch-tickets [options] <ticket id>"
 
-    optParameters = [['port', 'p', 'tcp:host=localhost:port=1352',
+    optParameters = [['port', 'p', DEFAULT_AMP_ENDPOINT,
                       'Service description for the AMP connector.']]
 
     def parseArgs(self, id):
@@ -69,11 +67,7 @@ def formatTicket(response):
 def main(reactor, *argv):
     config = Options()
     config.parseOptions(argv[1:])
-    def fetch(p):
-        d = p.callRemote(FetchTicket, id=config['id'], asHTML=False)
-        d.addCallback(formatTicket)
-        return d
+    def fetch(client):
+        return client.fetchTicket(config['id'], asHTML=False).addCallback(formatTicket)
     
-    d = connectProtocol(clientFromString(reactor, config['port']), amp.AMP())
-    d.addCallback(fetch)
-    return d
+    return connect(reactor, config['port']).addCallback(fetch)

@@ -66,12 +66,9 @@ class FetchReviewTickets(amp.Command):
     """
     Requests list of review tickets from data store.
 
-    @param asHTML: Whether to render comments/description as HTML or
-    not. Will use Trac wiki formatting if available.
-
     Returns all ticket fields.
     """
-    arguments = [('asHTML', amp.Boolean(optional=True))]
+    arguments = []
     response = [('tickets', amp.AmpList([('id', amp.Integer()),
                                          ('type', amp.Unicode()),
                                          ('time', amp.Integer()),
@@ -159,7 +156,7 @@ class AmptracResponder(amp.CommandLocator):
 
 
     @FetchReviewTickets.responder
-    def fetchReviewTickets(self, asHTML):
+    def fetchReviewTickets(self):
         """
         @see: L{FetchReviewTickets}
         """

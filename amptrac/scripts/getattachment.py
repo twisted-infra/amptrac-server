@@ -2,17 +2,15 @@
 # See LICENSE for details.
 
 import sys, time, datetime, os
-from twisted.internet.endpoints import (
-        clientFromString, connectProtocol, ProcessEndpoint)
+from twisted.internet.endpoints import connectProtocol, ProcessEndpoint
 from twisted.internet.error import ConnectionDone
 from twisted.internet.defer import Deferred
 from twisted.internet.utils import getProcessOutput
-from twisted.protocols import amp
 from twisted.python import usage
 from twisted.internet.defer import inlineCallbacks
 from twisted.test.proto_helpers import AccumulatingProtocol
-from amptrac.responder import FetchTicket
-import treq
+
+from amptrac.client import connect, getRawAttachment, DEFAULT_AMP_ENDPOINT, Client
 
 class ListOptions(usage.Options):
 
@@ -36,7 +34,7 @@ class ApplyOptions(usage.Options):
 class Options(usage.Options):
     synopsis = "fetch-tickets [options] <ticket id>"
 
-    optParameters = [['port', 'p', 'tcp:host=localhost:port=1352',
+    optParameters = [['port', 'p', DEFAULT_AMP_ENDPOINT,
                       'Service description for the AMP connector.']]
     subCommands = [['list', '', ListOptions, 'List attachemts.'],
                    ['get', '', GetOptions, 'Get attachemt.'],
@@ -68,20 +66,8 @@ def listAttachments(response):
     sys.__stdout__.write(''.join([headline, subline] + attachments))
 
 
-def getAttachment(id, filename):
-    url = 'https://twistedmatrix.com/trac/raw-attachment/ticket/%s/%s' % (id, filename)
-    d = treq.get(url.encode('utf-8'))
-    d.addCallback(treq.content)
-    return d
-
 def getLastAttachment(response):
-    return getAttachment(response['id'], response['attachments'][-1]['filename'])
-
-def connect(config, reactor):
-    return connectProtocol(clientFromString(reactor, config['port']), amp.AMP())
-
-def fetchTicket(proto, config):
-    return proto.callRemote(FetchTicket, id=config['id'], asHTML=False)
+    return getRawAttachment(response['id'], response['attachments'][-1]['filename'])
 
 @inlineCallbacks
 def applyPatch(patch, reactor, config, ticket):
@@ -109,22 +95,22 @@ def main(reactor, *argv):
     config.parseOptions(argv[1:])
 
     if config.subCommand == 'list':
-        return (connect(config)
-                .addCallback(fetchTicket, config)
+        return (connect(reactor, config['port'])
+                .addCallback(Client.fetchTicket, config['id'])
                 .addCallback(listAttachments))
     elif config.subCommand == 'get':
         if config.subOptions['filename']:
-            return (getAttachment(config['id'], config.subOptions['filename'])
+            return (getRawAttachment(config.subOptions['id'], config.subOptions['filename'])
                     .addCallback(sys.__stdout__.write))
         else:
-            return (connect(config, reactor)
-                    .addCallback(fetchTicket, config)
+            return (connect(reactor, config['port'])
+                    .addCallback(Client.fetchTicket, config['id'])
                     .addCallback(getLastAttachment)
                     .addCallback(sys.__stdout__.write))
     elif config.subCommand == 'apply':
         def apply(ticket):
             return (getLastAttachment(ticket)
                     .addCallback(applyPatch, reactor, config, ticket))
-        return (connect(config, reactor)
-                .addCallback(fetchTicket, config)
+        return (connect(reactor, config['port'])
+                .addCallback(Client.fetchTicket, config['id'])
                 .addCallback(apply))
