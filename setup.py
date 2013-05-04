@@ -17,7 +17,7 @@ from distutils.core import setup
 import setuptools
 
 setup(
-    name='amptrack',
+    name='amptrac',
     version='0.0',
     description='',
     author='Tom Prince',
