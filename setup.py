@@ -13,23 +13,19 @@
 #
 # Copyright Buildbot Team Members
 
-from distutils.core import setup
-import setuptools
+from setuptools import setup
 
 setup(
-    name='amptrac',
+    name='amptrac-server',
     version='0.0',
     description='',
     author='Tom Prince',
     author_email='tom.prince@ualberta.net',
-    packages=['amptrac', 'amptrac.scripts', 'amptrac.test'],
-    scripts=['bin/fetch-ticket', 'bin/review-tickets', 'bin/get-attachment'],
+    packages=['amptrac_server', 'amptrac_server.test'],
     install_requires=[
         'twisted >= 13.0.0',
-        'treq',
+        'amptrac',
+        'pg8000',
     ],
-    extras_require={
-        'server': ['twisted >= 13.0.0', 'pg8000'],
-    },
     zip_safe=False,
 )
