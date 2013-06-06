@@ -13,21 +13,12 @@ def postgres_probably_connect(name, username):
     """
     Connect to postgres or die trying.
     """
-    try:
-        import pgdb
-    except ImportError:
-        try:
-            import psycopg2
-        except ImportError:
-            from pg8000 import pg8000_dbapi
-            module = pg8000_dbapi
-            con = pg8000_dbapi.connect(username, host='localhost', database=name)
-        else:
-            module = psycopg2
-            con = psycopg2.connect(host="/var/run/postgresql", database=name,  user=username)
-    else:
-        module = pgdb
-        con = pgdb.connect(host="127.0.0.1", database=name, user=username)
+    from pg8000 import pg8000_dbapi
+    module = pg8000_dbapi
+    con = pg8000_dbapi.connect(
+            username,
+            unix_sock='/var/run/postgresql/.s.PGSQL.5432',
+            database=name)
     return module, con
 
 
