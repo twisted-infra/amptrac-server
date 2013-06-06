@@ -85,7 +85,7 @@ class TestCommands(unittest.TestCase):
             def fetchReviewTickets(f):
                 return succeed([FAKEREVIEWTICKET])
         resp = AmptracResponder(FakeStore())
-        box = FetchReviewTickets.makeArguments({"asHTML": False}, None)
+        box = FetchReviewTickets.makeArguments({}, None)
         d = resp.locateResponder("FetchReviewTickets")(box)
         from twisted.python import log
         d.addErrback(log.err)
