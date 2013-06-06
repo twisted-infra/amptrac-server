@@ -21,7 +21,7 @@ setup(
     description='',
     author='Tom Prince',
     author_email='tom.prince@ualberta.net',
-    packages=['amptrac_server', 'amptrac_server.test'],
+    packages=['amptrac_server', 'amptrac_server.test', 'twisted.plugins'],
     install_requires=[
         'twisted >= 13.0.0',
         'amptrac',

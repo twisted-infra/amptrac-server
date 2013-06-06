@@ -2,8 +2,8 @@
 # See LICENSE for details.
 from twisted.application.service import ServiceMaker
 
-Frack = ServiceMaker(
+AmpTrac = ServiceMaker(
     "Amptrac",
-    "amptrac.service",
+    "amptrac_server.service",
     ("A parasite upon issue trackers."),
     "amptrac")
