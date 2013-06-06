@@ -1,8 +1,9 @@
 from twisted.trial import unittest
 from twisted.internet.defer import succeed
 from twisted.protocols import amp
-from amptrac.responder import (
-        AmptracResponder, FetchTicket, UpdateTicket, FetchReviewTickets)
+from amptrac_server.responder import AmptracResponder
+from amptrac.commands import (
+        FetchTicket, UpdateTicket, FetchReviewTickets)
 
 
 FAKETICKET = {'id': 1,

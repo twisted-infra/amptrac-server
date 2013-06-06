@@ -1,7 +1,7 @@
 import sqlite3
 from twisted.trial.unittest import TestCase
 from twisted.python.util import sibpath
-from amptrac.db import DBStore, UnauthorizedError
+from amptrac_server.db import DBStore, UnauthorizedError
 
 
 

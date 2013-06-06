@@ -3,9 +3,9 @@
 import os, pwd
 from twisted.python import usage
 from twisted.application.service import Service
-from amptrac.db import DBStore, sqlite_connect, postgres_probably_connect
-from amptrac.responder import AmptracResponder
-from amptrac.wiring import AMPService
+from amptrac_server.db import DBStore, sqlite_connect, postgres_probably_connect
+from amptrac_server.responder import AmptracResponder
+from amptrac_server.wiring import AMPService
 
 class AmptracService(Service):
 
