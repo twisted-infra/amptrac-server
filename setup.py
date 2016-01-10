@@ -25,7 +25,7 @@ setup(
     install_requires=[
         'twisted >= 13.0.0',
         'amptrac',
-        'pg8000',
+        'pg8000==1.9.14',
     ],
     zip_safe=False,
 )
