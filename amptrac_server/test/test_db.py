@@ -58,7 +58,7 @@ class DBTests(TestCase):
             self.assertEqual(len(result['changes']), 17)
             self.assertEqual(set(result['changes'][0].keys()),
                              {"newvalue", "author", "oldvalue", "time", "field"})
-            
+
             self.assertEqual(len(result['attachments']), 1)
             self.assertEqual(set(result['attachments'][0].keys()),
                              {"id", "filename", "size", "time", "description", "author"})

@@ -31,6 +31,19 @@ def sqlite_connect(path):
     return sqlite3, sqlite3.connect(path)
 
 
+def noNullDict(keyValuePairs):
+    """
+    Eliminate any None values from C{keyValuePairs}.
+
+    @param keyValuePairs: a list of 2-tuples of (key:str, value:(str or None))
+
+    @return: keyValuePairs as a dictionary with any null value-elements
+        replaced with empty strings.
+    @rtype: L{dict}
+    """
+    return dict([(k, v or '') for k, v in keyValuePairs])
+
+
 class DBStore(object):
     """
     Abstract access to Trac's SQL database.
@@ -77,7 +90,7 @@ class DBStore(object):
         attachmentRows = c.fetchall()
         attachmentFields = ['id', 'filename', 'size', 'time', 'description', 'author']
 
-        ticket = dict([(k, v or '') for k, v in zip(ticketFields, ticketRow)])
+        ticket = noNullDict(zip(ticketFields, ticketRow))
 
         c.execute(self.q("SELECT name, value from ticket_custom where name "
                          "in ('branch', 'branch_author', 'launchpad_bug') "
@@ -86,11 +99,12 @@ class DBStore(object):
         ticket.update(c.fetchall())
         ticket['attachments'] = []
         for attachment in attachmentRows:
-            ticket['attachments'].append(dict([(k, v or '') for k, v in zip(attachmentFields, attachment)]))
+            ticket['attachments'].append(
+                noNullDict(zip(attachmentFields, attachment)))
 
         ticket['changes'] = []
         for change in changesRows:
-            ticket['changes'].append(dict([(k, v or '') for k, v in zip(changeFields, change)]))
+            ticket['changes'].append(noNullDict(zip(changeFields, change)))
 
         return defer.succeed(ticket)
 
@@ -110,13 +124,13 @@ class DBStore(object):
                         "keywords"]
         tickets = []
         for ticketRow in ticketRows:
-            ticket = dict([(k, v or '') for k, v in zip(ticketFields, ticketRow)])
+            ticket = noNullDict(zip(ticketFields, ticketRow))
 
             c.execute(self.q("SELECT name, value from ticket_custom where name "
                 "in ('branch', 'branch_author', 'launchpad_bug') "
                 "and ticket = ?"),
                 [ticket['id']])
-            ticket.update(c.fetchall())
+            ticket.update(noNullDict(c.fetchall()))
             tickets.append(ticket)
         return defer.succeed(tickets)
 
