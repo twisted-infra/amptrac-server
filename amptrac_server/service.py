@@ -29,6 +29,9 @@ class Options(usage.Options):
                      ['postgres_user', 'u', pwd.getpwuid(os.getuid())[0],
                       'Username for connecting to Postgres.'],
 
+                     ['postgres_host', 'h', None,
+                      'Host of the PostgreSQL server.'],
+
                      ['sqlite_db', None, None,
                       'Path to SQLite database to connect to.'],
 
@@ -47,7 +50,9 @@ def makeService(config):
         config['postgres_db'] = 'trac'
 
     if config['postgres_db']:
-        connection = postgres_probably_connect(config['postgres_db'], config['postgres_user'])
+        connection = postgres_probably_connect(config['postgres_db'],
+                                               config['postgres_user'],
+                                               config['postgres_host'])
     elif config['sqlite_db']:
         connection = sqlite_connect(config['sqlite_db'])
 

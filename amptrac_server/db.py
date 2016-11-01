@@ -9,16 +9,20 @@ class UnauthorizedError(Exception):
     """
 
 
-def postgres_probably_connect(name, username):
+def postgres_probably_connect(name, username, host):
     """
     Connect to postgres or die trying.
     """
     from pg8000 import pg8000_dbapi
     module = pg8000_dbapi
-    con = pg8000_dbapi.connect(
+    if host:
+        con = pg8000_dbapi.connect(host=host, user=username, database=name)
+    else:
+        con = pg8000_dbapi.connect(
             username,
             unix_sock='/var/run/postgresql/.s.PGSQL.5432',
             database=name)
+
     return module, con
 
 
@@ -72,7 +76,7 @@ class DBStore(object):
                 [str(ticketNumber)])
         attachmentRows = c.fetchall()
         attachmentFields = ['id', 'filename', 'size', 'time', 'description', 'author']
-        
+
         ticket = dict([(k, v or '') for k, v in zip(ticketFields, ticketRow)])
 
         c.execute(self.q("SELECT name, value from ticket_custom where name "
