@@ -17,7 +17,7 @@ from setuptools import setup
 
 setup(
     name='amptrac-server',
-    version='0.0',
+    version='0.0.1',
     description='',
     author='Tom Prince',
     author_email='tom.prince@ualberta.net',
