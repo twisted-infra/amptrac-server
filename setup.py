@@ -23,9 +23,9 @@ setup(
     author_email='tom.prince@ualberta.net',
     packages=['amptrac_server', 'amptrac_server.test', 'twisted.plugins'],
     install_requires=[
-        'twisted >= 13.0.0',
+        'twisted >= 16.5.0',
         'amptrac',
-        'pg8000==1.9.14',
+        'pg8000',
     ],
     zip_safe=False,
 )
